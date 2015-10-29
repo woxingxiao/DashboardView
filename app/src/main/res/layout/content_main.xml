@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#212121"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context=".MainActivity"
+    tools:showIn="@layout/activity_main">
+
+    <com.xw.exemple.dashboardviewdemo.DashboardView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <com.xw.exemple.dashboardviewdemo.DashboardView
+        android:id="@+id/dashboardView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:bigSliceCount="9"
+        app:headerRadius="50dp"
+        app:headerTitle="kW"
+        app:maxValue="450"
+        app:measureTextSize="10sp"
+        app:radius="110dp"
+        app:startAngle="210"
+        app:sweepAngle="120"/>
+</LinearLayout>
