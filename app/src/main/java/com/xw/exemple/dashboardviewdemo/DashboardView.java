@@ -74,7 +74,7 @@ public class DashboardView extends View {
         mRadius = a.getDimensionPixelSize(R.styleable.DashboardView_radius, dpToPx(80));
         mStartAngle = a.getInteger(R.styleable.DashboardView_startAngle, 180);
         mSweepAngle = a.getInteger(R.styleable.DashboardView_sweepAngle, 180);
-        mBigSliceCount = a.getInteger(R.styleable.DashboardView_bigSliceCount, 6);
+        mBigSliceCount = a.getInteger(R.styleable.DashboardView_bigSliceCount, 5);
         mSliceCountInOneBigSlice = a.getInteger(R.styleable.DashboardView_sliceCountInOneBigSlice, 5);
         mArcColor = a.getColor(R.styleable.DashboardView_arcColor, Color.WHITE);
         mMeasureTextSize = a.getDimensionPixelSize(R.styleable.DashboardView_measureTextSize, spToPx(12));
@@ -82,18 +82,18 @@ public class DashboardView extends View {
         mTextColorHighLight = a.getColor(R.styleable.DashboardView_textColorHighLight, Color.parseColor("#f98907"));
         mHeaderTitle = a.getString(R.styleable.DashboardView_headerTitle);
         if (mHeaderTitle == null) mHeaderTitle = "";
-        mHeaderTextSize = a.getDimensionPixelSize(R.styleable.DashboardView_headerTextSize, spToPx(17));
+        mHeaderTextSize = a.getDimensionPixelSize(R.styleable.DashboardView_headerTextSize, spToPx(14));
         mHeaderRadius = a.getDimensionPixelSize(R.styleable.DashboardView_headerRadius, mRadius / 3);
         mPointerRadius = a.getDimensionPixelSize(R.styleable.DashboardView_pointerRadius, mRadius / 3 * 2);
         mCircleRadius = a.getDimensionPixelSize(R.styleable.DashboardView_circleRadius, mRadius / 17);
         mMinValue = a.getInteger(R.styleable.DashboardView_minValue, 0);
-        mMaxValue = a.getInteger(R.styleable.DashboardView_maxValue, 1800);
-        realTimeValue = a.getFloat(R.styleable.DashboardView_realTimeValue, mMaxValue / 3.0f);
+        mMaxValue = a.getInteger(R.styleable.DashboardView_maxValue, 100);
+        realTimeValue = a.getFloat(R.styleable.DashboardView_realTimeValue, 0.0f);
 
         a.recycle();
 
         if (mStartAngle + mSweepAngle > 360)
-            throw new IllegalArgumentException("startAngle add sweepAngle must under 360 degree");
+            throw new IllegalArgumentException("Sum of startAngle add sweepAngle must less than 360 degree");
 
         mSmallSliceRadius = mRadius - dpToPx(10);
         mBigSliceRadius = mSmallSliceRadius - dpToPx(8);
