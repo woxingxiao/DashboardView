@@ -12,6 +12,8 @@ import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
 
+import java.util.List;
+
 public class DashboardView extends View {
 
     private int mRadius; // 圆弧半径
@@ -22,7 +24,6 @@ public class DashboardView extends View {
     private int mArcColor; // 弧度颜色
     private int mMeasureTextSize; // 刻度字体大小
     private int mTextColor; // 字体颜色
-    private int mTextColorHighLight; // 字体高亮颜色
     private String mHeaderTitle = ""; // 表头
     private int mHeaderTextSize; // 表头字体大小
     private int mHeaderRadius; // 表头半径
@@ -30,11 +31,14 @@ public class DashboardView extends View {
     private int mCircleRadius; // 中心圆半径
     private int mMinValue; // 最小值
     private int mMaxValue; // 最大值
-    private float realTimeValue; // 实时值
-
+    private float mRealTimeValue; // 实时值
+    private int mStripeWidth; // 色条宽度
     private int mBigSliceRadius; // 较长刻度半径
     private int mSmallSliceRadius; // 较短刻度半径
     private int mNumMeaRadius; // 数字刻度半径
+    private List<HighlightCR> mStripeHighlight;
+    private List<HighlightCR> mArcHighlight;
+
     private int mViewWidth; // 控件宽度
     private int mViewHeight; // 控件高度
     private float mCenterX;
@@ -44,8 +48,10 @@ public class DashboardView extends View {
     private Paint mPaintText;
     private Paint mPaintPointer;
     private Paint mPaintValue;
+    private Paint mPaintStripe;
 
     private RectF mRectArc;
+    private RectF mRectStripe;
     private Rect mRectMeasures;
     private Rect mRectHeader;
     private Rect mRectRealText;
@@ -55,7 +61,7 @@ public class DashboardView extends View {
     private float mBigSliceAngle; // 大刻度等分角度
     private float mSmallSliceAngle; // 小刻度等分角度
 
-    private String[] mGraduations; // 6等分的刻度值
+    private String[] mGraduations; // 等分的刻度值
     private float initAngle;
 
     public DashboardView(Context context) {
@@ -79,7 +85,6 @@ public class DashboardView extends View {
         mArcColor = a.getColor(R.styleable.DashboardView_arcColor, Color.WHITE);
         mMeasureTextSize = a.getDimensionPixelSize(R.styleable.DashboardView_measureTextSize, spToPx(12));
         mTextColor = a.getColor(R.styleable.DashboardView_textColor, Color.WHITE);
-        mTextColorHighLight = a.getColor(R.styleable.DashboardView_textColorHighLight, Color.parseColor("#f98907"));
         mHeaderTitle = a.getString(R.styleable.DashboardView_headerTitle);
         if (mHeaderTitle == null) mHeaderTitle = "";
         mHeaderTextSize = a.getDimensionPixelSize(R.styleable.DashboardView_headerTextSize, spToPx(14));
@@ -88,12 +93,13 @@ public class DashboardView extends View {
         mCircleRadius = a.getDimensionPixelSize(R.styleable.DashboardView_circleRadius, mRadius / 17);
         mMinValue = a.getInteger(R.styleable.DashboardView_minValue, 0);
         mMaxValue = a.getInteger(R.styleable.DashboardView_maxValue, 100);
-        realTimeValue = a.getFloat(R.styleable.DashboardView_realTimeValue, 0.0f);
+        mRealTimeValue = a.getFloat(R.styleable.DashboardView_realTimeValue, 0.0f);
+        mStripeWidth = a.getDimensionPixelSize(R.styleable.DashboardView_stripeWidth, 0);
 
         a.recycle();
 
-        if (mStartAngle + mSweepAngle > 360)
-            throw new IllegalArgumentException("Sum of startAngle add sweepAngle must less than 360 degree");
+        if ( mSweepAngle > 360)
+            throw new IllegalArgumentException("sweepAngle must less than 360 degree");
 
         mSmallSliceRadius = mRadius - dpToPx(10);
         mBigSliceRadius = mSmallSliceRadius - dpToPx(8);
@@ -105,19 +111,19 @@ public class DashboardView extends View {
         mGraduations = getMeasureNumbers();
 
         if (mStartAngle <= 180 && mStartAngle + mSweepAngle >= 180) {
-            mViewWidth = mRadius * 2 + getPaddingLeft() + getPaddingRight() + dpToPx(2) * 2;
+            mViewWidth = (mRadius + mStripeWidth) * 2 + getPaddingLeft() + getPaddingRight() + dpToPx(2) * 2;
         } else {
-            float[] point1 = getCoordinatePoint(mRadius, mStartAngle);
-            float[] point2 = getCoordinatePoint(mRadius, mStartAngle + mSweepAngle);
+            float[] point1 = getCoordinatePoint((mRadius + mStripeWidth), mStartAngle);
+            float[] point2 = getCoordinatePoint((mRadius + mStripeWidth), mStartAngle + mSweepAngle);
             float max = Math.max(Math.abs(point1[0]), Math.abs(point2[0]));
             mViewWidth = (int) (max * 2 + getPaddingLeft() + getPaddingRight() + dpToPx(2) * 2);
         }
         if ((mStartAngle <= 90 && mStartAngle + mSweepAngle >= 90) ||
                 (mStartAngle <= 270 && mStartAngle + mSweepAngle >= 270)) {
-            mViewHeight = mRadius * 2 + getPaddingLeft() + getPaddingRight() + dpToPx(2) * 2;
+            mViewHeight = (mRadius + mStripeWidth) * 2 + getPaddingLeft() + getPaddingRight() + dpToPx(2) * 2;
         } else {
-            float[] point1 = getCoordinatePoint(mRadius, mStartAngle);
-            float[] point2 = getCoordinatePoint(mRadius, mStartAngle + mSweepAngle);
+            float[] point1 = getCoordinatePoint((mRadius + mStripeWidth), mStartAngle);
+            float[] point2 = getCoordinatePoint((mRadius + mStripeWidth), mStartAngle + mSweepAngle);
             float max = Math.max(Math.abs(point1[0]), Math.abs(point2[0]));
             mViewHeight = (int) (max * 2 + getPaddingLeft() + getPaddingRight() + dpToPx(2) * 2);
         }
@@ -146,10 +152,8 @@ public class DashboardView extends View {
     private void init() {
         mPaintArc = new Paint();
         mPaintArc.setAntiAlias(true);
-        mPaintArc.setDither(true);
         mPaintArc.setColor(mArcColor);
         mPaintArc.setStyle(Paint.Style.STROKE);
-        mPaintArc.setStrokeJoin(Paint.Join.ROUND);
         mPaintArc.setStrokeCap(Paint.Cap.ROUND);
 
         mPaintText = new Paint();
@@ -159,12 +163,21 @@ public class DashboardView extends View {
 
         mPaintPointer = new Paint();
         mPaintPointer.setAntiAlias(true);
-        mPaintPointer.setDither(true);
+
+        mPaintStripe = new Paint();
+        mPaintStripe.setAntiAlias(true);
+        mPaintStripe.setStyle(Paint.Style.STROKE);
+        mPaintStripe.setStrokeWidth(mStripeWidth);
 
         mRectArc = new RectF(mCenterX - mRadius, mCenterY - mRadius, mCenterX + mRadius, mCenterY + mRadius);
+        if (mStripeWidth > 0) {
+            mRectStripe = new RectF(mCenterX - (mRadius + mStripeWidth / 2), mCenterY - (mRadius + mStripeWidth / 2),
+                    mCenterX + (mRadius + mStripeWidth / 2), mCenterY + (mRadius + mStripeWidth / 2));
+        }
         mRectMeasures = new Rect();
         mRectHeader = new Rect();
         mRectRealText = new Rect();
+        path = new Path();
 
         mPaintValue = new Paint();
         mPaintValue.setAntiAlias(true);
@@ -172,11 +185,9 @@ public class DashboardView extends View {
         mPaintValue.setStyle(Paint.Style.STROKE);
         mPaintValue.setTextAlign(Paint.Align.CENTER);
         mPaintValue.setTextSize(spToPx(16));
-        mPaintValue.getTextBounds(trimFloat(realTimeValue), 0, trimFloat(realTimeValue).length(), mRectRealText);
+        mPaintValue.getTextBounds(trimFloat(mRealTimeValue), 0, trimFloat(mRealTimeValue).length(), mRectRealText);
 
-        path = new Path();
-
-        initAngle = getAngleFromResult(realTimeValue);
+        initAngle = getAngleFromResult(mRealTimeValue);
     }
 
 
@@ -197,8 +208,8 @@ public class DashboardView extends View {
             mViewHeight = dpToPx(heightSize);
         } else {
             if (mStartAngle >= 180 && mStartAngle + mSweepAngle <= 360) {
-                mViewHeight = mRadius + mCircleRadius + dpToPx(2) + dpToPx(25) +
-                        +getPaddingTop() + getPaddingBottom() + mRectRealText.height();
+                mViewHeight = mRadius + mStripeWidth + mCircleRadius + dpToPx(2) + dpToPx(25) +
+                        getPaddingTop() + getPaddingBottom() + mRectRealText.height();
             }
             if (widthMode == MeasureSpec.AT_MOST)
                 mViewHeight = Math.min(mViewHeight, widthSize);
@@ -210,16 +221,49 @@ public class DashboardView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        //绘制刻度盘的弧形
-        mPaintArc.setStrokeWidth(dpToPx(2));
-        canvas.drawArc(mRectArc, mStartAngle, mSweepAngle, false, mPaintArc);
+        // 绘制色带
+        if (mStripeHighlight != null && !mStripeHighlight.isEmpty()) {
+            for (int i = 0; i < mStripeHighlight.size(); i++) {
+                HighlightCR highlightCR = mStripeHighlight.get(i);
+                if (highlightCR.getColor() == 0 || highlightCR.getSweepAngle() == 0)
+                    continue;
 
+                mPaintStripe.setColor(highlightCR.getColor());
+                if (highlightCR.getStartAngle() + highlightCR.getSweepAngle() <= mStartAngle + mSweepAngle) {
+                    canvas.drawArc(mRectStripe, highlightCR.getStartAngle(),
+                            highlightCR.getSweepAngle(), false, mPaintStripe);
+                } else {
+                    canvas.drawArc(mRectStripe, highlightCR.getStartAngle(),
+                            mStartAngle + mSweepAngle - highlightCR.getStartAngle(), false, mPaintStripe);
+                    break;
+                }
+            }
+        }
+
+        mPaintArc.setStrokeWidth(dpToPx(2));
         //绘制刻度盘上的刻度
         for (int i = 0; i <= mBigSliceCount; i++) {
-            float angle = i * mBigSliceAngle + mStartAngle;
             //绘制大刻度
-            float[] point1 = getCoordinatePoint(mRadius, angle);
+            float angle = i * mBigSliceAngle + mStartAngle;
+            float[] point1 = getCoordinatePoint(mRadius - dpToPx(1), angle);
             float[] point2 = getCoordinatePoint(mBigSliceRadius, angle);
+
+            if (mArcHighlight != null && !mArcHighlight.isEmpty()) {
+                for (int j = 0; j < mArcHighlight.size(); j++) {
+                    HighlightCR highlightCR = mArcHighlight.get(j);
+                    if (highlightCR.getColor() == 0 || highlightCR.getSweepAngle() == 0)
+                        continue;
+
+                    if (angle <= highlightCR.getStartAngle() + highlightCR.getSweepAngle()) {
+                        mPaintArc.setColor(highlightCR.getColor());
+                        break;
+                    } else {
+                        mPaintArc.setColor(mArcColor);
+                    }
+                }
+            } else {
+                mPaintArc.setColor(mArcColor);
+            }
             canvas.drawLine(point1[0], point1[1], point2[0], point2[1], mPaintArc);
 
             //绘制圆盘上的数字
@@ -252,14 +296,55 @@ public class DashboardView extends View {
         }
 
         //绘制小的子刻度
+        mPaintArc.setStrokeWidth(dpToPx(1));
         for (int i = 0; i < mSmallSliceCount; i++) {
             if (i % 5 != 0) {
                 float angle = i * mSmallSliceAngle + mStartAngle;
                 float[] point1 = getCoordinatePoint(mRadius, angle);
                 float[] point2 = getCoordinatePoint(mSmallSliceRadius, angle);
+
+                if (mArcHighlight != null && !mArcHighlight.isEmpty()) {
+                    for (int j = 0; j < mArcHighlight.size(); j++) {
+                        HighlightCR highlightCR = mArcHighlight.get(j);
+                        if (highlightCR.getColor() == 0 || highlightCR.getSweepAngle() == 0)
+                            continue;
+
+                        if (angle <= highlightCR.getStartAngle() + highlightCR.getSweepAngle()) {
+                            mPaintArc.setColor(highlightCR.getColor());
+                            break;
+                        } else {
+                            mPaintArc.setColor(mArcColor);
+                        }
+                    }
+                } else {
+                    mPaintArc.setColor(mArcColor);
+                }
                 mPaintArc.setStrokeWidth(dpToPx(1));
                 canvas.drawLine(point1[0], point1[1], point2[0], point2[1], mPaintArc);
             }
+        }
+
+        //绘制刻度盘的弧形
+        mPaintArc.setStrokeWidth(dpToPx(2));
+        if (mArcHighlight != null && !mArcHighlight.isEmpty()) {
+            for (int i = 0; i < mArcHighlight.size(); i++) {
+                HighlightCR highlightCR = mArcHighlight.get(i);
+                if (highlightCR.getColor() == 0 || highlightCR.getSweepAngle() == 0)
+                    continue;
+
+                mPaintArc.setColor(highlightCR.getColor());
+                if (highlightCR.getStartAngle() + highlightCR.getSweepAngle() <= mStartAngle + mSweepAngle) {
+                    canvas.drawArc(mRectArc, highlightCR.getStartAngle(),
+                            highlightCR.getSweepAngle(), false, mPaintArc);
+                } else {
+                    canvas.drawArc(mRectArc, highlightCR.getStartAngle(),
+                            mStartAngle + mSweepAngle - highlightCR.getStartAngle(), false, mPaintArc);
+                    break;
+                }
+            }
+        } else {
+            mPaintArc.setColor(mArcColor);
+            canvas.drawArc(mRectArc, mStartAngle, mSweepAngle, false, mPaintArc);
         }
 
         //表头
@@ -289,11 +374,11 @@ public class DashboardView extends View {
         path.lineTo(point3[0], point3[1]);
         path.close();
         canvas.drawPath(path, mPaintPointer);
-
         // 绘制三角形指针底部的圆弧效果
         canvas.drawCircle((point1[0] + point2[0]) / 2, (point1[1] + point2[1]) / 2, dpToPx(3), mPaintPointer);
+
         // 绘制读数
-        canvas.drawText(trimFloat(realTimeValue), mCenterX,
+        canvas.drawText(trimFloat(mRealTimeValue), mCenterX,
                 mCenterY + mCircleRadius + dpToPx(2) + dpToPx(25), mPaintValue);
     }
 
@@ -348,14 +433,6 @@ public class DashboardView extends View {
         return mSweepAngle * (result - mMinValue) / (mMaxValue - mMinValue) + mStartAngle;
     }
 
-    public float getRealTimeValue() {
-        return realTimeValue;
-    }
-
-    public void setRealTimeValue(float realTimeValue) {
-        this.realTimeValue = realTimeValue;
-    }
-
     /**
      * float类型如果小数点后为零则显示整数否则保留
      */
@@ -364,5 +441,173 @@ public class DashboardView extends View {
             return String.valueOf((long) value);
         }
         return String.valueOf(value);
+    }
+
+    public int getRadius() {
+        return mRadius;
+    }
+
+    public void setRadius(int radius) {
+        mRadius = radius;
+    }
+
+    public int getStartAngle() {
+        return mStartAngle;
+    }
+
+    public void setStartAngle(int startAngle) {
+        mStartAngle = startAngle;
+    }
+
+    public int getSweepAngle() {
+        return mSweepAngle;
+    }
+
+    public void setSweepAngle(int sweepAngle) {
+        mSweepAngle = sweepAngle;
+    }
+
+    public int getBigSliceCount() {
+        return mBigSliceCount;
+    }
+
+    public void setBigSliceCount(int bigSliceCount) {
+        mBigSliceCount = bigSliceCount;
+    }
+
+    public int getSliceCountInOneBigSlice() {
+        return mSliceCountInOneBigSlice;
+    }
+
+    public void setSliceCountInOneBigSlice(int sliceCountInOneBigSlice) {
+        mSliceCountInOneBigSlice = sliceCountInOneBigSlice;
+    }
+
+    public int getArcColor() {
+        return mArcColor;
+    }
+
+    public void setArcColor(int arcColor) {
+        mArcColor = arcColor;
+    }
+
+    public int getMeasureTextSize() {
+        return mMeasureTextSize;
+    }
+
+    public void setMeasureTextSize(int measureTextSize) {
+        mMeasureTextSize = measureTextSize;
+    }
+
+    public int getTextColor() {
+        return mTextColor;
+    }
+
+    public void setTextColor(int textColor) {
+        mTextColor = textColor;
+    }
+
+    public String getHeaderTitle() {
+        return mHeaderTitle;
+    }
+
+    public void setHeaderTitle(String headerTitle) {
+        mHeaderTitle = headerTitle;
+    }
+
+    public int getHeaderTextSize() {
+        return mHeaderTextSize;
+    }
+
+    public void setHeaderTextSize(int headerTextSize) {
+        mHeaderTextSize = headerTextSize;
+    }
+
+    public int getHeaderRadius() {
+        return mHeaderRadius;
+    }
+
+    public void setHeaderRadius(int headerRadius) {
+        mHeaderRadius = headerRadius;
+    }
+
+    public int getPointerRadius() {
+        return mPointerRadius;
+    }
+
+    public void setPointerRadius(int pointerRadius) {
+        mPointerRadius = pointerRadius;
+    }
+
+    public int getCircleRadius() {
+        return mCircleRadius;
+    }
+
+    public void setCircleRadius(int circleRadius) {
+        mCircleRadius = circleRadius;
+    }
+
+    public int getMinValue() {
+        return mMinValue;
+    }
+
+    public void setMinValue(int minValue) {
+        mMinValue = minValue;
+    }
+
+    public int getMaxValue() {
+        return mMaxValue;
+    }
+
+    public void setMaxValue(int maxValue) {
+        mMaxValue = maxValue;
+    }
+
+    public float getRealTimeValue() {
+        return mRealTimeValue;
+    }
+
+    public void setRealTimeValue(float realTimeValue) {
+        mRealTimeValue = realTimeValue;
+    }
+
+    public int getStripeWidth() {
+        return mStripeWidth;
+    }
+
+    public void setStripeWidth(int stripeWidth) {
+        mStripeWidth = stripeWidth;
+    }
+
+    public int getBigSliceRadius() {
+        return mBigSliceRadius;
+    }
+
+    public void setBigSliceRadius(int bigSliceRadius) {
+        mBigSliceRadius = bigSliceRadius;
+    }
+
+    public int getSmallSliceRadius() {
+        return mSmallSliceRadius;
+    }
+
+    public void setSmallSliceRadius(int smallSliceRadius) {
+        mSmallSliceRadius = smallSliceRadius;
+    }
+
+    public int getNumMeaRadius() {
+        return mNumMeaRadius;
+    }
+
+    public void setNumMeaRadius(int numMeaRadius) {
+        mNumMeaRadius = numMeaRadius;
+    }
+
+    public void setStripeHighlightColorAndRange(List<HighlightCR> stripeHighlight) {
+        mStripeHighlight = stripeHighlight;
+    }
+
+    public void setArcHighlightColorAndRange(List<HighlightCR> arcHighlight) {
+        mArcHighlight = arcHighlight;
     }
 }

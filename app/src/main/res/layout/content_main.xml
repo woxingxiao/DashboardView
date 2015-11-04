@@ -20,7 +20,7 @@
         android:layout_height="wrap_content"/>
 
     <com.xw.exemple.dashboardviewdemo.DashboardView
-        android:id="@+id/dashboardView"
+        android:id="@+id/dashboardView1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:bigSliceCount="9"
@@ -29,6 +29,22 @@
         app:maxValue="450"
         app:measureTextSize="10sp"
         app:radius="110dp"
+        app:realTimeValue="225"
         app:startAngle="210"
         app:sweepAngle="120"/>
+
+    <com.xw.exemple.dashboardviewdemo.DashboardView
+        android:id="@+id/dashboardView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:bigSliceCount="12"
+        app:headerRadius="50dp"
+        app:headerTitle="km/h"
+        app:maxValue="240"
+        app:measureTextSize="10sp"
+        app:radius="110dp"
+        app:realTimeValue="80"
+        app:startAngle="150"
+        app:stripeWidth="10dp"
+        app:sweepAngle="240"/>
 </LinearLayout>

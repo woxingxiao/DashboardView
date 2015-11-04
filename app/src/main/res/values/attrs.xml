@@ -9,7 +9,6 @@
         <attr name="arcColor" format="color"/> <!--弧度颜色-->
         <attr name="measureTextSize" format="dimension"/> <!--刻度字体大小-->
         <attr name="textColor" format="color"/> <!--字体颜色-->
-        <attr name="textColorHighLight" format="color"/> <!--高亮字体颜色-->
         <attr name="headerTitle" format="string"/> <!--表头-->
         <attr name="headerTextSize" format="string"/> <!--表头字体大小-->
         <attr name="headerRadius" format="dimension"/> <!--表头半径-->
@@ -18,5 +17,6 @@
         <attr name="minValue" format="integer"/> <!--最小值-->
         <attr name="maxValue" format="integer"/> <!--最大值-->
         <attr name="realTimeValue" format="float"/> <!--实时值-->
+        <attr name="stripeWidth" format="dimension"/> <!--色带宽度-->
     </declare-styleable>
 </resources>
