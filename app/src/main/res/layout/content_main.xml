@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -7,44 +7,68 @@
     android:layout_height="match_parent"
     android:background="#212121"
     android:orientation="vertical"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <com.xw.exemple.dashboardviewdemo.DashboardView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-
-    <com.xw.exemple.dashboardviewdemo.DashboardView
-        android:id="@+id/dashboardView1"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:bigSliceCount="9"
-        app:headerRadius="50dp"
-        app:headerTitle="kW"
-        app:maxValue="450"
-        app:measureTextSize="10sp"
-        app:radius="110dp"
-        app:realTimeValue="225"
-        app:startAngle="210"
-        app:sweepAngle="120"/>
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="@dimen/activity_horizontal_margin">
 
-    <com.xw.exemple.dashboardviewdemo.DashboardView
-        android:id="@+id/dashboardView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:bigSliceCount="12"
-        app:headerRadius="50dp"
-        app:headerTitle="km/h"
-        app:maxValue="240"
-        app:measureTextSize="10sp"
-        app:radius="110dp"
-        app:realTimeValue="80"
-        app:startAngle="150"
-        app:stripeWidth="10dp"
-        app:sweepAngle="240"/>
-</LinearLayout>
+        <com.xw.exemple.dashboardviewdemo.DashboardView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <com.xw.exemple.dashboardviewdemo.DashboardView
+            android:id="@+id/dashboardView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:bigSliceCount="9"
+            app:headerRadius="50dp"
+            app:headerTitle="kW"
+            app:maxValue="450"
+            app:measureTextSize="10sp"
+            app:radius="110dp"
+            app:realTimeValue="225"
+            app:startAngle="210"
+            app:stripeWidth="30dp"
+            app:sweepAngle="120"/>
+
+        <com.xw.exemple.dashboardviewdemo.DashboardView
+            android:id="@+id/dashboardView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:bigSliceCount="12"
+            app:headerRadius="50dp"
+            app:headerTitle="km/h"
+            app:maxValue="240"
+            app:measureTextSize="10sp"
+            app:radius="110dp"
+            app:realTimeValue="80"
+            app:startAngle="150"
+            app:stripeMode="inner"
+            app:stripeWidth="40dp"
+            app:sweepAngle="240"/>
+
+        <com.xw.exemple.dashboardviewdemo.DashboardView
+            android:id="@+id/dashboardView3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:bigSliceCount="12"
+            app:headerRadius="50dp"
+            app:headerTitle="km/h"
+            app:maxValue="240"
+            app:measureTextSize="10sp"
+            app:radius="110dp"
+            app:realTimeValue="80"
+            app:startAngle="150"
+            app:stripeMode="outer"
+            app:stripeWidth="20dp"
+            app:sweepAngle="240"/>
+
+
+    </LinearLayout>
+</ScrollView>

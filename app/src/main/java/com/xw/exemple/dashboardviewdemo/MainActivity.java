@@ -21,19 +21,23 @@ public class MainActivity extends AppCompatActivity {
 
         DashboardView dashboardView1 = (DashboardView) findViewById(R.id.dashboardView1);
         DashboardView dashboardView2 = (DashboardView) findViewById(R.id.dashboardView2);
+        DashboardView dashboardView3 = (DashboardView) findViewById(R.id.dashboardView3);
 
         List<HighlightCR> highlight1 = new ArrayList<>();
         highlight1.add(new HighlightCR(210, 60, Color.parseColor("#03A9F4")));
         highlight1.add(new HighlightCR(270, 60, Color.parseColor("#FFA000")));
-        // 自定义高亮模式，刻度盘高亮
-        dashboardView1.setArcHighlightColorAndRange(highlight1);
+        dashboardView1.setStripeHighlightColorAndRange(highlight1);
 
         List<HighlightCR> highlight2 = new ArrayList<>();
-        highlight2.add(new HighlightCR(150, 100, Color.parseColor("#4CAF50")));
-        highlight2.add(new HighlightCR(250, 80, Color.parseColor("#FFEB3B")));
-        highlight2.add(new HighlightCR(330, 60, Color.parseColor("#F44336")));
-        // 自定义高亮模式，色带高亮
+        highlight2.add(new HighlightCR(150, 180, Color.parseColor("#607D8B")));
+        highlight2.add(new HighlightCR(330, 60, Color.parseColor("#795548")));
         dashboardView2.setStripeHighlightColorAndRange(highlight2);
+
+        List<HighlightCR> highlight3 = new ArrayList<>();
+        highlight3.add(new HighlightCR(150, 100, Color.parseColor("#4CAF50")));
+        highlight3.add(new HighlightCR(250, 80, Color.parseColor("#FFEB3B")));
+        highlight3.add(new HighlightCR(330, 60, Color.parseColor("#F44336")));
+        dashboardView3.setStripeHighlightColorAndRange(highlight3);
     }
 
     @Override

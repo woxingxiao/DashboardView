@@ -18,5 +18,10 @@
         <attr name="maxValue" format="integer"/> <!--最大值-->
         <attr name="realTimeValue" format="float"/> <!--实时值-->
         <attr name="stripeWidth" format="dimension"/> <!--色带宽度-->
+        <attr name="stripeMode" > <!--色条显示位置-->
+            <enum name="normal" value="0"/>
+            <enum name="inner" value="1"/>
+            <enum name="outer" value="2"/>
+        </attr>
     </declare-styleable>
 </resources>
