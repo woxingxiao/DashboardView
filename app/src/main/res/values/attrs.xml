@@ -23,5 +23,6 @@
             <enum name="inner" value="1"/>
             <enum name="outer" value="2"/>
         </attr>
+        <attr name="bgColor" format="color"/> <!--背景颜色-->
     </declare-styleable>
 </resources>

@@ -2,7 +2,7 @@ package com.xw.exemple.dashboardviewdemo;
 
 /**
  * HighlightColorAndRange
- * 高亮效果的范围和颜色
+ * 高亮效果的范围和颜色对象
  * Created by woxingxiao on 2015/11/3.
  */
 public class HighlightCR {

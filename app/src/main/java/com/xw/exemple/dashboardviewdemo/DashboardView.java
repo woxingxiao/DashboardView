@@ -42,7 +42,9 @@ public class DashboardView extends View {
     private int mBigSliceRadius; // 较长刻度半径
     private int mSmallSliceRadius; // 较短刻度半径
     private int mNumMeaRadius; // 数字刻度半径
-    private List<HighlightCR> mStripeHighlight;
+    private int mModeType;
+    private List<HighlightCR> mStripeHighlight; // 高亮范围颜色对象的集合
+    private int mBgColor; // 背景色
 
     private int mViewWidth; // 控件宽度
     private int mViewHeight; // 控件高度
@@ -68,6 +70,7 @@ public class DashboardView extends View {
 
     private String[] mGraduations; // 等分的刻度值
     private float initAngle;
+    private boolean textColorFlag = true;
 
     public DashboardView(Context context) {
         this(context, null);
@@ -89,7 +92,7 @@ public class DashboardView extends View {
         mSliceCountInOneBigSlice = a.getInteger(R.styleable.DashboardView_sliceCountInOneBigSlice, 5);
         mArcColor = a.getColor(R.styleable.DashboardView_arcColor, Color.WHITE);
         mMeasureTextSize = a.getDimensionPixelSize(R.styleable.DashboardView_measureTextSize, spToPx(12));
-        mTextColor = a.getColor(R.styleable.DashboardView_textColor, Color.WHITE);
+        mTextColor = a.getColor(R.styleable.DashboardView_textColor, mArcColor);
         mHeaderTitle = a.getString(R.styleable.DashboardView_headerTitle);
         if (mHeaderTitle == null) mHeaderTitle = "";
         mHeaderTextSize = a.getDimensionPixelSize(R.styleable.DashboardView_headerTextSize, spToPx(14));
@@ -100,59 +103,10 @@ public class DashboardView extends View {
         mMaxValue = a.getInteger(R.styleable.DashboardView_maxValue, 100);
         mRealTimeValue = a.getFloat(R.styleable.DashboardView_realTimeValue, 0.0f);
         mStripeWidth = a.getDimensionPixelSize(R.styleable.DashboardView_stripeWidth, 0);
-        int modeType = a.getInt(R.styleable.DashboardView_stripeMode, 0);
+        mModeType = a.getInt(R.styleable.DashboardView_stripeMode, 0);
+        mBgColor = a.getColor(R.styleable.DashboardView_bgColor, 0);
 
         a.recycle();
-
-        if (mSweepAngle > 360)
-            throw new IllegalArgumentException("sweepAngle must less than 360 degree");
-
-        mSmallSliceRadius = mRadius - dpToPx(10);
-        mBigSliceRadius = mSmallSliceRadius - dpToPx(8);
-        mNumMeaRadius = mBigSliceRadius - dpToPx(2);
-
-        mSmallSliceCount = mBigSliceCount * 5;
-        mBigSliceAngle = mSweepAngle / (float) mBigSliceCount;
-        mSmallSliceAngle = mBigSliceAngle / mSliceCountInOneBigSlice;
-        mGraduations = getMeasureNumbers();
-        switch (modeType) {
-            case 0:
-                mStripeMode = StripeMode.NORMAL;
-                break;
-            case 1:
-                mStripeMode = StripeMode.INNER;
-                break;
-            case 2:
-                mStripeMode = StripeMode.OUTER;
-                break;
-        }
-
-        int totalRadius;
-        if (mStripeMode == StripeMode.OUTER) {
-            totalRadius = mRadius + mStripeWidth;
-        } else {
-            totalRadius = mRadius;
-        }
-        if (mStartAngle <= 180 && mStartAngle + mSweepAngle >= 180) {
-            mViewWidth = totalRadius * 2 + getPaddingLeft() + getPaddingRight() + dpToPx(2) * 2;
-        } else {
-            float[] point1 = getCoordinatePoint(totalRadius, mStartAngle);
-            float[] point2 = getCoordinatePoint(totalRadius, mStartAngle + mSweepAngle);
-            float max = Math.max(Math.abs(point1[0]), Math.abs(point2[0]));
-            mViewWidth = (int) (max * 2 + getPaddingLeft() + getPaddingRight() + dpToPx(2) * 2);
-        }
-        if ((mStartAngle <= 90 && mStartAngle + mSweepAngle >= 90) ||
-                (mStartAngle <= 270 && mStartAngle + mSweepAngle >= 270)) {
-            mViewHeight = totalRadius * 2 + getPaddingLeft() + getPaddingRight() + dpToPx(2) * 2;
-        } else {
-            float[] point1 = getCoordinatePoint(totalRadius, mStartAngle);
-            float[] point2 = getCoordinatePoint(totalRadius, mStartAngle + mSweepAngle);
-            float max = Math.max(Math.abs(point1[0]), Math.abs(point2[0]));
-            mViewHeight = (int) (max * 2 + getPaddingLeft() + getPaddingRight() + dpToPx(2) * 2);
-        }
-
-        mCenterX = mViewWidth / 2.0f;
-        mCenterY = mViewHeight / 2.0f;
 
         init();
     }
@@ -173,6 +127,59 @@ public class DashboardView extends View {
     }
 
     private void init() {
+        if (mSweepAngle > 360)
+            throw new IllegalArgumentException("sweepAngle must less than 360 degree");
+
+        mSmallSliceRadius = mRadius - dpToPx(10);
+        mBigSliceRadius = mSmallSliceRadius - dpToPx(8);
+        mNumMeaRadius = mBigSliceRadius - dpToPx(2);
+
+        mSmallSliceCount = mBigSliceCount * 5;
+        mBigSliceAngle = mSweepAngle / (float) mBigSliceCount;
+        mSmallSliceAngle = mBigSliceAngle / mSliceCountInOneBigSlice;
+        mGraduations = getMeasureNumbers();
+
+        switch (mModeType) {
+            case 0:
+                mStripeMode = StripeMode.NORMAL;
+                break;
+            case 1:
+                mStripeMode = StripeMode.INNER;
+                break;
+            case 2:
+                mStripeMode = StripeMode.OUTER;
+                break;
+        }
+
+        int totalRadius;
+        if (mStripeMode == StripeMode.OUTER) {
+            totalRadius = mRadius + mStripeWidth;
+        } else {
+            totalRadius = mRadius;
+        }
+
+        mCenterX = mCenterY = 0.0f;
+        if (mStartAngle <= 180 && mStartAngle + mSweepAngle >= 180) {
+            mViewWidth = totalRadius * 2 + getPaddingLeft() + getPaddingRight() + dpToPx(2) * 2;
+        } else {
+            float[] point1 = getCoordinatePoint(totalRadius, mStartAngle);
+            float[] point2 = getCoordinatePoint(totalRadius, mStartAngle + mSweepAngle);
+            float max = Math.max(Math.abs(point1[0]), Math.abs(point2[0]));
+            mViewWidth = (int) (max * 2 + getPaddingLeft() + getPaddingRight() + dpToPx(2) * 2);
+        }
+        if ((mStartAngle <= 90 && mStartAngle + mSweepAngle >= 90) ||
+                (mStartAngle <= 270 && mStartAngle + mSweepAngle >= 270)) {
+            mViewHeight = totalRadius * 2 + getPaddingLeft() + getPaddingRight() + dpToPx(2) * 2;
+        } else {
+            float[] point1 = getCoordinatePoint(totalRadius, mStartAngle);
+            float[] point2 = getCoordinatePoint(totalRadius, mStartAngle + mSweepAngle);
+            float max = Math.max(Math.abs(point1[1]), Math.abs(point2[1]));
+            mViewHeight = (int) (max * 2 + getPaddingLeft() + getPaddingRight() + dpToPx(2) * 2);
+        }
+
+        mCenterX = mViewWidth / 2.0f;
+        mCenterY = mViewHeight / 2.0f;
+
         mPaintArc = new Paint();
         mPaintArc.setAntiAlias(true);
         mPaintArc.setColor(mArcColor);
@@ -193,8 +200,8 @@ public class DashboardView extends View {
         mPaintStripe.setStrokeWidth(mStripeWidth);
 
         mRectArc = new RectF(mCenterX - mRadius, mCenterY - mRadius, mCenterX + mRadius, mCenterY + mRadius);
+        int r = 0;
         if (mStripeWidth > 0) {
-            int r = 0;
             if (mStripeMode == StripeMode.OUTER) {
                 r = mRadius + dpToPx(1) + mStripeWidth / 2;
             } else if (mStripeMode == StripeMode.INNER) {
@@ -212,7 +219,7 @@ public class DashboardView extends View {
         mPaintValue.setColor(mTextColor);
         mPaintValue.setStyle(Paint.Style.STROKE);
         mPaintValue.setTextAlign(Paint.Align.CENTER);
-        mPaintValue.setTextSize(spToPx(16));
+        mPaintValue.setTextSize(Math.max(mHeaderTextSize, mMeasureTextSize));
         mPaintValue.getTextBounds(trimFloat(mRealTimeValue), 0, trimFloat(mRealTimeValue).length(), mRectRealText);
 
         initAngle = getAngleFromResult(mRealTimeValue);
@@ -244,6 +251,13 @@ public class DashboardView extends View {
             if (mStartAngle >= 180 && mStartAngle + mSweepAngle <= 360) {
                 mViewHeight = totalRadius + mCircleRadius + dpToPx(2) + dpToPx(25) +
                         getPaddingTop() + getPaddingBottom() + mRectRealText.height();
+            } else {
+                float[] point1 = getCoordinatePoint(totalRadius, mStartAngle);
+                float[] point2 = getCoordinatePoint(totalRadius, mStartAngle + mSweepAngle);
+                float maxY = Math.max(Math.abs(point1[1]) - mCenterY, Math.abs(point2[1]) - mCenterY);
+                float f = mCircleRadius + dpToPx(2) + dpToPx(25) + mRectRealText.height();
+                float max = Math.max(maxY, f);
+                mViewHeight = (int) (max + totalRadius + getPaddingTop() + getPaddingBottom() + dpToPx(2) * 2);
             }
             if (widthMode == MeasureSpec.AT_MOST)
                 mViewHeight = Math.min(mViewHeight, widthSize);
@@ -255,6 +269,9 @@ public class DashboardView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
+        if (mBgColor != 0)
+            canvas.drawColor(mBgColor);
+
         // 绘制色带
         if (mStripeMode != StripeMode.NORMAL && mStripeHighlight != null) {
             for (int i = 0; i < mStripeHighlight.size(); i++) {
@@ -389,22 +406,23 @@ public class DashboardView extends View {
 
         mPaintPointer.setStyle(Paint.Style.STROKE);
         mPaintPointer.setStrokeWidth(dpToPx(4));
-        mPaintPointer.setColor(Color.WHITE);
+        mPaintPointer.setColor(mArcColor);
         canvas.drawCircle(mCenterX, mCenterY, mCircleRadius + dpToPx(2), mPaintPointer);
 
         //绘制三角形指针
         mPaintPointer.setStyle(Paint.Style.FILL);
-        mPaintPointer.setColor(Color.WHITE);
-        float[] point1 = getCoordinatePoint(dpToPx(3), initAngle + 90);
+        mPaintPointer.setColor(mArcColor);
+        float[] point1 = getCoordinatePoint(mCircleRadius / 2, initAngle + 90);
         path.moveTo(point1[0], point1[1]);
-        float[] point2 = getCoordinatePoint(dpToPx(3), initAngle - 90);
+        float[] point2 = getCoordinatePoint(mCircleRadius / 2, initAngle - 90);
         path.lineTo(point2[0], point2[1]);
         float[] point3 = getCoordinatePoint(mPointerRadius, initAngle);
         path.lineTo(point3[0], point3[1]);
         path.close();
         canvas.drawPath(path, mPaintPointer);
         // 绘制三角形指针底部的圆弧效果
-        canvas.drawCircle((point1[0] + point2[0]) / 2, (point1[1] + point2[1]) / 2, dpToPx(3), mPaintPointer);
+        canvas.drawCircle((point1[0] + point2[0]) / 2, (point1[1] + point2[1]) / 2,
+                mCircleRadius / 2, mPaintPointer);
 
         // 绘制读数
         canvas.drawText(trimFloat(mRealTimeValue), mCenterX,
@@ -459,6 +477,8 @@ public class DashboardView extends View {
      * 通过数值得到角度位置
      */
     private float getAngleFromResult(float result) {
+        if (result > mMaxValue)
+            return mMaxValue;
         return mSweepAngle * (result - mMinValue) / (mMaxValue - mMinValue) + mStartAngle;
     }
 
@@ -477,7 +497,8 @@ public class DashboardView extends View {
     }
 
     public void setRadius(int radius) {
-        mRadius = radius;
+        mRadius = dpToPx(radius);
+        init();
     }
 
     public int getStartAngle() {
@@ -486,6 +507,7 @@ public class DashboardView extends View {
 
     public void setStartAngle(int startAngle) {
         mStartAngle = startAngle;
+        init();
     }
 
     public int getSweepAngle() {
@@ -494,6 +516,7 @@ public class DashboardView extends View {
 
     public void setSweepAngle(int sweepAngle) {
         mSweepAngle = sweepAngle;
+        init();
     }
 
     public int getBigSliceCount() {
@@ -502,6 +525,7 @@ public class DashboardView extends View {
 
     public void setBigSliceCount(int bigSliceCount) {
         mBigSliceCount = bigSliceCount;
+        init();
     }
 
     public int getSliceCountInOneBigSlice() {
@@ -510,6 +534,7 @@ public class DashboardView extends View {
 
     public void setSliceCountInOneBigSlice(int sliceCountInOneBigSlice) {
         mSliceCountInOneBigSlice = sliceCountInOneBigSlice;
+        init();
     }
 
     public int getArcColor() {
@@ -518,6 +543,9 @@ public class DashboardView extends View {
 
     public void setArcColor(int arcColor) {
         mArcColor = arcColor;
+        if (textColorFlag)
+            mTextColor = mArcColor;
+        init();
     }
 
     public int getMeasureTextSize() {
@@ -525,7 +553,8 @@ public class DashboardView extends View {
     }
 
     public void setMeasureTextSize(int measureTextSize) {
-        mMeasureTextSize = measureTextSize;
+        mMeasureTextSize = spToPx(measureTextSize);
+        init();
     }
 
     public int getTextColor() {
@@ -534,6 +563,8 @@ public class DashboardView extends View {
 
     public void setTextColor(int textColor) {
         mTextColor = textColor;
+        textColorFlag = false;
+        init();
     }
 
     public String getHeaderTitle() {
@@ -542,6 +573,7 @@ public class DashboardView extends View {
 
     public void setHeaderTitle(String headerTitle) {
         mHeaderTitle = headerTitle;
+        init();
     }
 
     public int getHeaderTextSize() {
@@ -549,7 +581,8 @@ public class DashboardView extends View {
     }
 
     public void setHeaderTextSize(int headerTextSize) {
-        mHeaderTextSize = headerTextSize;
+        mHeaderTextSize = spToPx(headerTextSize);
+        init();
     }
 
     public int getHeaderRadius() {
@@ -557,7 +590,8 @@ public class DashboardView extends View {
     }
 
     public void setHeaderRadius(int headerRadius) {
-        mHeaderRadius = headerRadius;
+        mHeaderRadius = dpToPx(headerRadius);
+        init();
     }
 
     public int getPointerRadius() {
@@ -565,7 +599,8 @@ public class DashboardView extends View {
     }
 
     public void setPointerRadius(int pointerRadius) {
-        mPointerRadius = pointerRadius;
+        mPointerRadius = dpToPx(pointerRadius);
+        init();
     }
 
     public int getCircleRadius() {
@@ -573,7 +608,8 @@ public class DashboardView extends View {
     }
 
     public void setCircleRadius(int circleRadius) {
-        mCircleRadius = circleRadius;
+        mCircleRadius = dpToPx(circleRadius);
+        init();
     }
 
     public int getMinValue() {
@@ -582,6 +618,7 @@ public class DashboardView extends View {
 
     public void setMinValue(int minValue) {
         mMinValue = minValue;
+        init();
     }
 
     public int getMaxValue() {
@@ -590,6 +627,7 @@ public class DashboardView extends View {
 
     public void setMaxValue(int maxValue) {
         mMaxValue = maxValue;
+        init();
     }
 
     public float getRealTimeValue() {
@@ -598,6 +636,7 @@ public class DashboardView extends View {
 
     public void setRealTimeValue(float realTimeValue) {
         mRealTimeValue = realTimeValue;
+        init();
     }
 
     public int getStripeWidth() {
@@ -605,15 +644,28 @@ public class DashboardView extends View {
     }
 
     public void setStripeWidth(int stripeWidth) {
-        mStripeWidth = stripeWidth;
+        mStripeWidth = dpToPx(stripeWidth);
+        init();
     }
 
-    public StripeMode getmStripeMode() {
+    public StripeMode getStripeMode() {
         return mStripeMode;
     }
 
-    public void setmStripeMode(StripeMode mStripeMode) {
+    public void setStripeMode(StripeMode mStripeMode) {
         this.mStripeMode = mStripeMode;
+        switch (mStripeMode) {
+            case NORMAL:
+                mModeType = 0;
+                break;
+            case INNER:
+                mModeType = 1;
+                break;
+            case OUTER:
+                mModeType = 2;
+                break;
+        }
+        init();
     }
 
     public int getBigSliceRadius() {
@@ -621,7 +673,8 @@ public class DashboardView extends View {
     }
 
     public void setBigSliceRadius(int bigSliceRadius) {
-        mBigSliceRadius = bigSliceRadius;
+        mBigSliceRadius = dpToPx(bigSliceRadius);
+        init();
     }
 
     public int getSmallSliceRadius() {
@@ -629,7 +682,8 @@ public class DashboardView extends View {
     }
 
     public void setSmallSliceRadius(int smallSliceRadius) {
-        mSmallSliceRadius = smallSliceRadius;
+        mSmallSliceRadius = dpToPx(smallSliceRadius);
+        init();
     }
 
     public int getNumMeaRadius() {
@@ -637,16 +691,27 @@ public class DashboardView extends View {
     }
 
     public void setNumMeaRadius(int numMeaRadius) {
-        mNumMeaRadius = numMeaRadius;
+        mNumMeaRadius = dpToPx(numMeaRadius);
+        init();
     }
 
     public void setStripeHighlightColorAndRange(List<HighlightCR> stripeHighlight) {
         mStripeHighlight = stripeHighlight;
+        init();
     }
 
     public enum StripeMode {
         NORMAL,
         INNER,
         OUTER
+    }
+
+    public int getBgColor() {
+        return mBgColor;
+    }
+
+    public void setBgColor(int mBgColor) {
+        this.mBgColor = mBgColor;
+        init();
     }
 }

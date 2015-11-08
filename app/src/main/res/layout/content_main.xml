@@ -19,6 +19,7 @@
         android:padding="@dimen/activity_horizontal_margin">
 
         <com.xw.exemple.dashboardviewdemo.DashboardView
+            android:id="@+id/dashboardView0"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
@@ -32,7 +33,7 @@
             app:maxValue="450"
             app:measureTextSize="10sp"
             app:radius="110dp"
-            app:realTimeValue="225"
+            app:realTimeValue="325"
             app:startAngle="210"
             app:stripeWidth="30dp"
             app:sweepAngle="120"/>
@@ -48,27 +49,14 @@
             app:measureTextSize="10sp"
             app:radius="110dp"
             app:realTimeValue="80"
-            app:startAngle="150"
+            app:startAngle="170"
             app:stripeMode="inner"
             app:stripeWidth="40dp"
-            app:sweepAngle="240"/>
+            app:sweepAngle="200"/>
 
         <com.xw.exemple.dashboardviewdemo.DashboardView
             android:id="@+id/dashboardView3"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:bigSliceCount="12"
-            app:headerRadius="50dp"
-            app:headerTitle="km/h"
-            app:maxValue="240"
-            app:measureTextSize="10sp"
-            app:radius="110dp"
-            app:realTimeValue="80"
-            app:startAngle="150"
-            app:stripeMode="outer"
-            app:stripeWidth="20dp"
-            app:sweepAngle="240"/>
-
-
+            android:layout_height="wrap_content"/>
     </LinearLayout>
 </ScrollView>
