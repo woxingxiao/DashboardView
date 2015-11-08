@@ -1,4 +1,4 @@
-package com.xw.exemple.dashboardviewdemo;
+package com.xw.example.dashboardviewdemo;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

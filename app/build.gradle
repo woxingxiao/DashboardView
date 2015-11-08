@@ -5,7 +5,7 @@ android {
     buildToolsVersion "23.0.2"
 
     defaultConfig {
-        applicationId "com.xw.exemple.dashboardviewdemo"
+        applicationId "com.xw.example.dashboardviewdemo"
         minSdkVersion 14
         targetSdkVersion 23
         versionCode 1

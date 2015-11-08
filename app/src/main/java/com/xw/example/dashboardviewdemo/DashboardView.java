@@ -1,4 +1,4 @@
-package com.xw.exemple.dashboardviewdemo;
+package com.xw.example.dashboardviewdemo;
 
 import android.content.Context;
 import android.content.res.TypedArray;
