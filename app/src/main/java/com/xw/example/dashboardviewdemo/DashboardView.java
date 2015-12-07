@@ -70,7 +70,7 @@ public class DashboardView extends View {
 
     private String[] mGraduations; // 等分的刻度值
     private float initAngle;
-    private boolean textColorFlag = true;
+    private boolean textColorFlag = true; // 若不单独设置文字颜色，则文字和圆弧同色
 
     public DashboardView(Context context) {
         this(context, null);
@@ -108,7 +108,8 @@ public class DashboardView extends View {
 
         a.recycle();
 
-        init();
+        initObjects();
+        initSizes();
     }
 
     private String[] getMeasureNumbers() {
@@ -126,7 +127,41 @@ public class DashboardView extends View {
         return strings;
     }
 
-    private void init() {
+    private void initObjects() {
+        mPaintArc = new Paint();
+        mPaintArc.setAntiAlias(true);
+        mPaintArc.setColor(mArcColor);
+        mPaintArc.setStyle(Paint.Style.STROKE);
+        mPaintArc.setStrokeCap(Paint.Cap.ROUND);
+
+        mPaintText = new Paint();
+        mPaintText.setAntiAlias(true);
+        mPaintText.setColor(mTextColor);
+        mPaintText.setStyle(Paint.Style.STROKE);
+
+        mPaintPointer = new Paint();
+        mPaintPointer.setAntiAlias(true);
+
+        mPaintStripe = new Paint();
+        mPaintStripe.setAntiAlias(true);
+        mPaintStripe.setStyle(Paint.Style.STROKE);
+        mPaintStripe.setStrokeWidth(mStripeWidth);
+
+        mRectMeasures = new Rect();
+        mRectHeader = new Rect();
+        mRectRealText = new Rect();
+        path = new Path();
+
+        mPaintValue = new Paint();
+        mPaintValue.setAntiAlias(true);
+        mPaintValue.setColor(mTextColor);
+        mPaintValue.setStyle(Paint.Style.STROKE);
+        mPaintValue.setTextAlign(Paint.Align.CENTER);
+        mPaintValue.setTextSize(Math.max(mHeaderTextSize, mMeasureTextSize));
+        mPaintValue.getTextBounds(trimFloat(mRealTimeValue), 0, trimFloat(mRealTimeValue).length(), mRectRealText);
+    }
+
+    private void initSizes() {
         if (mSweepAngle > 360)
             throw new IllegalArgumentException("sweepAngle must less than 360 degree");
 
@@ -180,25 +215,6 @@ public class DashboardView extends View {
         mCenterX = mViewWidth / 2.0f;
         mCenterY = mViewHeight / 2.0f;
 
-        mPaintArc = new Paint();
-        mPaintArc.setAntiAlias(true);
-        mPaintArc.setColor(mArcColor);
-        mPaintArc.setStyle(Paint.Style.STROKE);
-        mPaintArc.setStrokeCap(Paint.Cap.ROUND);
-
-        mPaintText = new Paint();
-        mPaintText.setAntiAlias(true);
-        mPaintText.setColor(mTextColor);
-        mPaintText.setStyle(Paint.Style.STROKE);
-
-        mPaintPointer = new Paint();
-        mPaintPointer.setAntiAlias(true);
-
-        mPaintStripe = new Paint();
-        mPaintStripe.setAntiAlias(true);
-        mPaintStripe.setStyle(Paint.Style.STROKE);
-        mPaintStripe.setStrokeWidth(mStripeWidth);
-
         mRectArc = new RectF(mCenterX - mRadius, mCenterY - mRadius, mCenterX + mRadius, mCenterY + mRadius);
         int r = 0;
         if (mStripeWidth > 0) {
@@ -209,18 +225,6 @@ public class DashboardView extends View {
             }
             mRectStripe = new RectF(mCenterX - r, mCenterY - r, mCenterX + r, mCenterY + r);
         }
-        mRectMeasures = new Rect();
-        mRectHeader = new Rect();
-        mRectRealText = new Rect();
-        path = new Path();
-
-        mPaintValue = new Paint();
-        mPaintValue.setAntiAlias(true);
-        mPaintValue.setColor(mTextColor);
-        mPaintValue.setStyle(Paint.Style.STROKE);
-        mPaintValue.setTextAlign(Paint.Align.CENTER);
-        mPaintValue.setTextSize(Math.max(mHeaderTextSize, mMeasureTextSize));
-        mPaintValue.getTextBounds(trimFloat(mRealTimeValue), 0, trimFloat(mRealTimeValue).length(), mRectRealText);
 
         initAngle = getAngleFromResult(mRealTimeValue);
     }
@@ -429,14 +433,6 @@ public class DashboardView extends View {
                 mCenterY + mCircleRadius + dpToPx(2) + dpToPx(25), mPaintValue);
     }
 
-    private int dpToPx(int dp) {
-        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());
-    }
-
-    private int spToPx(int sp) {
-        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, getResources().getDisplayMetrics());
-    }
-
     /**
      * 依圆心坐标，半径，扇形角度，计算出扇形终射线与圆弧交叉点的xy坐标
      */
@@ -498,7 +494,8 @@ public class DashboardView extends View {
 
     public void setRadius(int radius) {
         mRadius = dpToPx(radius);
-        init();
+        initSizes();
+        invalidate();
     }
 
     public int getStartAngle() {
@@ -507,7 +504,8 @@ public class DashboardView extends View {
 
     public void setStartAngle(int startAngle) {
         mStartAngle = startAngle;
-        init();
+        initSizes();
+        invalidate();
     }
 
     public int getSweepAngle() {
@@ -516,7 +514,8 @@ public class DashboardView extends View {
 
     public void setSweepAngle(int sweepAngle) {
         mSweepAngle = sweepAngle;
-        init();
+        initSizes();
+        invalidate();
     }
 
     public int getBigSliceCount() {
@@ -525,7 +524,8 @@ public class DashboardView extends View {
 
     public void setBigSliceCount(int bigSliceCount) {
         mBigSliceCount = bigSliceCount;
-        init();
+        initSizes();
+        invalidate();
     }
 
     public int getSliceCountInOneBigSlice() {
@@ -534,7 +534,8 @@ public class DashboardView extends View {
 
     public void setSliceCountInOneBigSlice(int sliceCountInOneBigSlice) {
         mSliceCountInOneBigSlice = sliceCountInOneBigSlice;
-        init();
+        initSizes();
+        invalidate();
     }
 
     public int getArcColor() {
@@ -543,9 +544,12 @@ public class DashboardView extends View {
 
     public void setArcColor(int arcColor) {
         mArcColor = arcColor;
-        if (textColorFlag)
+        mPaintArc.setColor(arcColor);
+        if (textColorFlag) {
             mTextColor = mArcColor;
-        init();
+            mPaintText.setColor(arcColor);
+        }
+        invalidate();
     }
 
     public int getMeasureTextSize() {
@@ -554,7 +558,8 @@ public class DashboardView extends View {
 
     public void setMeasureTextSize(int measureTextSize) {
         mMeasureTextSize = spToPx(measureTextSize);
-        init();
+        initSizes();
+        invalidate();
     }
 
     public int getTextColor() {
@@ -564,7 +569,8 @@ public class DashboardView extends View {
     public void setTextColor(int textColor) {
         mTextColor = textColor;
         textColorFlag = false;
-        init();
+        mPaintText.setColor(textColor);
+        invalidate();
     }
 
     public String getHeaderTitle() {
@@ -573,7 +579,7 @@ public class DashboardView extends View {
 
     public void setHeaderTitle(String headerTitle) {
         mHeaderTitle = headerTitle;
-        init();
+        invalidate();
     }
 
     public int getHeaderTextSize() {
@@ -582,7 +588,8 @@ public class DashboardView extends View {
 
     public void setHeaderTextSize(int headerTextSize) {
         mHeaderTextSize = spToPx(headerTextSize);
-        init();
+        initSizes();
+        invalidate();
     }
 
     public int getHeaderRadius() {
@@ -591,7 +598,8 @@ public class DashboardView extends View {
 
     public void setHeaderRadius(int headerRadius) {
         mHeaderRadius = dpToPx(headerRadius);
-        init();
+        initSizes();
+        invalidate();
     }
 
     public int getPointerRadius() {
@@ -600,7 +608,8 @@ public class DashboardView extends View {
 
     public void setPointerRadius(int pointerRadius) {
         mPointerRadius = dpToPx(pointerRadius);
-        init();
+        initSizes();
+        invalidate();
     }
 
     public int getCircleRadius() {
@@ -609,7 +618,8 @@ public class DashboardView extends View {
 
     public void setCircleRadius(int circleRadius) {
         mCircleRadius = dpToPx(circleRadius);
-        init();
+        initSizes();
+        invalidate();
     }
 
     public int getMinValue() {
@@ -618,7 +628,8 @@ public class DashboardView extends View {
 
     public void setMinValue(int minValue) {
         mMinValue = minValue;
-        init();
+        initSizes();
+        invalidate();
     }
 
     public int getMaxValue() {
@@ -627,7 +638,8 @@ public class DashboardView extends View {
 
     public void setMaxValue(int maxValue) {
         mMaxValue = maxValue;
-        init();
+        initSizes();
+        invalidate();
     }
 
     public float getRealTimeValue() {
@@ -636,7 +648,8 @@ public class DashboardView extends View {
 
     public void setRealTimeValue(float realTimeValue) {
         mRealTimeValue = realTimeValue;
-        init();
+        initSizes();
+        invalidate();
     }
 
     public int getStripeWidth() {
@@ -645,7 +658,8 @@ public class DashboardView extends View {
 
     public void setStripeWidth(int stripeWidth) {
         mStripeWidth = dpToPx(stripeWidth);
-        init();
+        initSizes();
+        invalidate();
     }
 
     public StripeMode getStripeMode() {
@@ -665,7 +679,8 @@ public class DashboardView extends View {
                 mModeType = 2;
                 break;
         }
-        init();
+        initSizes();
+        invalidate();
     }
 
     public int getBigSliceRadius() {
@@ -674,7 +689,8 @@ public class DashboardView extends View {
 
     public void setBigSliceRadius(int bigSliceRadius) {
         mBigSliceRadius = dpToPx(bigSliceRadius);
-        init();
+        initSizes();
+        invalidate();
     }
 
     public int getSmallSliceRadius() {
@@ -683,7 +699,8 @@ public class DashboardView extends View {
 
     public void setSmallSliceRadius(int smallSliceRadius) {
         mSmallSliceRadius = dpToPx(smallSliceRadius);
-        init();
+        initSizes();
+        invalidate();
     }
 
     public int getNumMeaRadius() {
@@ -692,12 +709,14 @@ public class DashboardView extends View {
 
     public void setNumMeaRadius(int numMeaRadius) {
         mNumMeaRadius = dpToPx(numMeaRadius);
-        init();
+        initSizes();
+        invalidate();
     }
 
     public void setStripeHighlightColorAndRange(List<HighlightCR> stripeHighlight) {
         mStripeHighlight = stripeHighlight;
-        init();
+        mPaintStripe.setStrokeWidth(mStripeWidth);
+        invalidate();
     }
 
     public enum StripeMode {
@@ -712,6 +731,14 @@ public class DashboardView extends View {
 
     public void setBgColor(int mBgColor) {
         this.mBgColor = mBgColor;
-        init();
+        invalidate();
+    }
+
+    private int dpToPx(int dp) {
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());
+    }
+
+    private int spToPx(int sp) {
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, getResources().getDisplayMetrics());
     }
 }
