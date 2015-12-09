@@ -416,6 +416,7 @@ public class DashboardView extends View {
         //绘制三角形指针
         mPaintPointer.setStyle(Paint.Style.FILL);
         mPaintPointer.setColor(mArcColor);
+        path.reset();
         float[] point1 = getCoordinatePoint(mCircleRadius / 2, initAngle + 90);
         path.moveTo(point1[0], point1[1]);
         float[] point2 = getCoordinatePoint(mCircleRadius / 2, initAngle - 90);
@@ -648,7 +649,7 @@ public class DashboardView extends View {
 
     public void setRealTimeValue(float realTimeValue) {
         mRealTimeValue = realTimeValue;
-        initSizes();
+        initAngle = getAngleFromResult(mRealTimeValue);
         invalidate();
     }
 
