@@ -71,6 +71,7 @@ public class DashboardView extends View {
     private String[] mGraduations; // 等分的刻度值
     private float initAngle;
     private boolean textColorFlag = true; // 若不单独设置文字颜色，则文字和圆弧同色
+    private boolean ifUpdateValue; // 更新实时值
 
     public DashboardView(Context context) {
         this(context, null);
@@ -276,7 +277,22 @@ public class DashboardView extends View {
         if (mBgColor != 0)
             canvas.drawColor(mBgColor);
 
-        // 绘制色带
+        if (!ifUpdateValue) {
+            drawStripe(canvas);
+            drawMeasures(canvas);
+            drawArc(canvas);
+            drawCircleAndReadingText(canvas);
+        }
+        if (ifUpdateValue) {
+            ifUpdateValue = false;
+            drawPointer(canvas);
+        }
+    }
+
+    /**
+     * 绘制色带
+     */
+    private void drawStripe(Canvas canvas) {
         if (mStripeMode != StripeMode.NORMAL && mStripeHighlight != null) {
             for (int i = 0; i < mStripeHighlight.size(); i++) {
                 HighlightCR highlightCR = mStripeHighlight.get(i);
@@ -294,9 +310,13 @@ public class DashboardView extends View {
                 }
             }
         }
+    }
 
+    /**
+     * 绘制刻度盘
+     */
+    private void drawMeasures(Canvas canvas) {
         mPaintArc.setStrokeWidth(dpToPx(2));
-        //绘制刻度盘
         for (int i = 0; i <= mBigSliceCount; i++) {
             //绘制大刻度
             float angle = i * mBigSliceAngle + mStartAngle;
@@ -369,7 +389,12 @@ public class DashboardView extends View {
             }
         }
 
-        //绘制刻度盘的弧形
+    }
+
+    /**
+     * 绘制刻度盘的弧形
+     */
+    private void drawArc(Canvas canvas) {
         mPaintArc.setStrokeWidth(dpToPx(2));
         if (mStripeMode == StripeMode.NORMAL) {
             if (mStripeHighlight != null) {
@@ -396,7 +421,12 @@ public class DashboardView extends View {
             mPaintArc.setColor(mArcColor);
             canvas.drawArc(mRectArc, mStartAngle, mSweepAngle, false, mPaintArc);
         }
+    }
 
+    /**
+     * 绘制圆和文字读数
+     */
+    private void drawCircleAndReadingText(Canvas canvas) {
         //表头
         mPaintText.setTextSize(mHeaderTextSize);
         mPaintText.setTextAlign(Paint.Align.CENTER);
@@ -413,10 +443,17 @@ public class DashboardView extends View {
         mPaintPointer.setColor(mArcColor);
         canvas.drawCircle(mCenterX, mCenterY, mCircleRadius + dpToPx(2), mPaintPointer);
 
-        //绘制三角形指针
+        // 绘制读数
+        canvas.drawText(trimFloat(mRealTimeValue), mCenterX,
+                mCenterY + mCircleRadius + dpToPx(2) + dpToPx(25), mPaintValue);
+    }
+
+    /**
+     * 绘制指针
+     */
+    private void drawPointer(Canvas canvas) {
         mPaintPointer.setStyle(Paint.Style.FILL);
         mPaintPointer.setColor(mArcColor);
-        path.reset();
         float[] point1 = getCoordinatePoint(mCircleRadius / 2, initAngle + 90);
         path.moveTo(point1[0], point1[1]);
         float[] point2 = getCoordinatePoint(mCircleRadius / 2, initAngle - 90);
@@ -428,10 +465,6 @@ public class DashboardView extends View {
         // 绘制三角形指针底部的圆弧效果
         canvas.drawCircle((point1[0] + point2[0]) / 2, (point1[1] + point2[1]) / 2,
                 mCircleRadius / 2, mPaintPointer);
-
-        // 绘制读数
-        canvas.drawText(trimFloat(mRealTimeValue), mCenterX,
-                mCenterY + mCircleRadius + dpToPx(2) + dpToPx(25), mPaintValue);
     }
 
     /**
@@ -649,7 +682,8 @@ public class DashboardView extends View {
 
     public void setRealTimeValue(float realTimeValue) {
         mRealTimeValue = realTimeValue;
-        initAngle = getAngleFromResult(mRealTimeValue);
+        ifUpdateValue = true;
+        initSizes();
         invalidate();
     }
 
