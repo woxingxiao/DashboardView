@@ -71,7 +71,6 @@ public class DashboardView extends View {
     private String[] mGraduations; // 等分的刻度值
     private float initAngle;
     private boolean textColorFlag = true; // 若不单独设置文字颜色，则文字和圆弧同色
-    private boolean ifUpdateValue; // 更新实时值
 
     public DashboardView(Context context) {
         this(context, null);
@@ -274,19 +273,13 @@ public class DashboardView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        if (mBgColor != 0)
-            canvas.drawColor(mBgColor);
+        if (mBgColor != 0) canvas.drawColor(mBgColor);
 
-        if (!ifUpdateValue) {
-            drawStripe(canvas);
-            drawMeasures(canvas);
-            drawArc(canvas);
-            drawCircleAndReadingText(canvas);
-        }
-        if (ifUpdateValue) {
-            ifUpdateValue = false;
-            drawPointer(canvas);
-        }
+        drawStripe(canvas);
+        drawMeasures(canvas);
+        drawArc(canvas);
+        drawCircleAndReadingText(canvas);
+        drawPointer(canvas);
     }
 
     /**
@@ -454,6 +447,7 @@ public class DashboardView extends View {
     private void drawPointer(Canvas canvas) {
         mPaintPointer.setStyle(Paint.Style.FILL);
         mPaintPointer.setColor(mArcColor);
+        path.reset();
         float[] point1 = getCoordinatePoint(mCircleRadius / 2, initAngle + 90);
         path.moveTo(point1[0], point1[1]);
         float[] point2 = getCoordinatePoint(mCircleRadius / 2, initAngle - 90);
@@ -682,7 +676,6 @@ public class DashboardView extends View {
 
     public void setRealTimeValue(float realTimeValue) {
         mRealTimeValue = realTimeValue;
-        ifUpdateValue = true;
         initSizes();
         invalidate();
     }
