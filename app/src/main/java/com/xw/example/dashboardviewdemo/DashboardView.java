@@ -8,6 +8,8 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.os.Handler;
+import android.os.Message;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
@@ -71,6 +73,10 @@ public class DashboardView extends View {
     private String[] mGraduations; // 等分的刻度值
     private float initAngle;
     private boolean textColorFlag = true; // 若不单独设置文字颜色，则文字和圆弧同色
+    private boolean mAnimEnable; // 是否播放动画
+    private long mAnimDuration = 500L; // 动画时长，默认500毫秒
+    private MyHandler mHandler;
+    private boolean isTimerRunning; // 计时器启动
 
     public DashboardView(Context context) {
         this(context, null);
@@ -159,6 +165,8 @@ public class DashboardView extends View {
         mPaintValue.setTextAlign(Paint.Align.CENTER);
         mPaintValue.setTextSize(Math.max(mHeaderTextSize, mMeasureTextSize));
         mPaintValue.getTextBounds(trimFloat(mRealTimeValue), 0, trimFloat(mRealTimeValue).length(), mRectRealText);
+
+        mHandler = new MyHandler();
     }
 
     private void initSizes() {
@@ -762,11 +770,66 @@ public class DashboardView extends View {
         invalidate();
     }
 
+    public boolean isAnimEnable() {
+        return mAnimEnable;
+    }
+
+    public void setAnimEnable(boolean animEnable) {
+        mAnimEnable = animEnable;
+        if (mAnimEnable) {
+            isTimerRunning = true;
+            new TimerThread().run();
+        }
+    }
+
+    public void setAnimEnable(boolean animEnable, long animDuration) {
+        mAnimEnable = animEnable;
+        mAnimDuration = animDuration;
+        if (mAnimEnable) {
+            isTimerRunning = true;
+            new TimerThread().run();
+        }
+    }
+
     private int dpToPx(int dp) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());
     }
 
     private int spToPx(int sp) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, getResources().getDisplayMetrics());
+    }
+
+    private class MyHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            invalidate();
+        }
+    }
+
+    private class TimerThread implements Runnable {
+
+        long time = (long) (mAnimDuration / mRealTimeValue);
+        float sum;
+        float temp = mRealTimeValue;
+
+        @Override
+        public void run() {
+            while (isTimerRunning) {
+                try {
+                    Thread.sleep(time);
+                    sum += 1;
+                    if (sum < temp) {
+                        mRealTimeValue = sum;
+                    } else {
+                        mRealTimeValue = temp;
+                        isTimerRunning = false;
+                    }
+                    mHandler.sendEmptyMessage(0);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }
