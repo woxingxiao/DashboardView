@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,9 +20,16 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        DashboardView dashboardView1 = (DashboardView) findViewById(R.id.dashboardView1);
+        final DashboardView dashboardView1 = (DashboardView) findViewById(R.id.dashboardView1);
         DashboardView dashboardView2 = (DashboardView) findViewById(R.id.dashboardView2);
         DashboardView dashboardView3 = (DashboardView) findViewById(R.id.dashboardView3);
+        dashboardView1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dashboardView1.setRealTimeValue(150.f);
+                dashboardView1.setAnimEnable(true);
+            }
+        });
 
         List<HighlightCR> highlight1 = new ArrayList<>();
         highlight1.add(new HighlightCR(210, 60, Color.parseColor("#03A9F4")));
