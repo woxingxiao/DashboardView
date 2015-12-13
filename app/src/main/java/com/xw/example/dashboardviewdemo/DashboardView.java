@@ -76,7 +76,6 @@ public class DashboardView extends View {
     private boolean mAnimEnable; // 是否播放动画
     private long mAnimDuration = 500L; // 动画时长，默认500毫秒
     private MyHandler mHandler;
-    private boolean isTimerRunning; // 计时器启动
 
     public DashboardView(Context context) {
         this(context, null);
@@ -777,8 +776,8 @@ public class DashboardView extends View {
     public void setAnimEnable(boolean animEnable) {
         mAnimEnable = animEnable;
         if (mAnimEnable) {
-            isTimerRunning = true;
-            new TimerThread().run();
+            mHandler.endValue = mRealTimeValue;
+            mHandler.sendEmptyMessage(0);
         }
     }
 
@@ -786,8 +785,8 @@ public class DashboardView extends View {
         mAnimEnable = animEnable;
         mAnimDuration = animDuration;
         if (mAnimEnable) {
-            isTimerRunning = true;
-            new TimerThread().run();
+            mHandler.endValue = mRealTimeValue;
+            mHandler.sendEmptyMessage(0);
         }
     }
 
@@ -800,36 +799,25 @@ public class DashboardView extends View {
     }
 
     private class MyHandler extends Handler {
+
+        float sum;
+        float endValue;
+
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            invalidate();
-        }
-    }
-
-    private class TimerThread implements Runnable {
-
-        long time = (long) (mAnimDuration / mRealTimeValue);
-        float sum;
-        float temp = mRealTimeValue;
-
-        @Override
-        public void run() {
-            while (isTimerRunning) {
-                try {
-                    Thread.sleep(time);
-                    sum += 1;
-                    if (sum < temp) {
-                        mRealTimeValue = sum;
-                    } else {
-                        mRealTimeValue = temp;
-                        isTimerRunning = false;
-                    }
-                    mHandler.sendEmptyMessage(0);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            if (msg.what == 0) {
+                sum += 2;
+                if (sum < endValue) {
+                    mRealTimeValue = sum;
+                    sendEmptyMessageDelayed(0, 10);
+                } else {
+                    mRealTimeValue = endValue;
                 }
+                initAngle = getAngleFromResult(mRealTimeValue);
+                invalidate();
             }
         }
     }
+
 }
