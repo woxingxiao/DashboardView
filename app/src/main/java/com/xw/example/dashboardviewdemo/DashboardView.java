@@ -73,8 +73,7 @@ public class DashboardView extends View {
     private String[] mGraduations; // 等分的刻度值
     private float initAngle;
     private boolean textColorFlag = true; // 若不单独设置文字颜色，则文字和圆弧同色
-    private boolean mAnimEnable; // 是否播放动画
-    private long mAnimDuration = 500L; // 动画时长，默认500毫秒
+    private boolean mAnimEnable ; // 是否播放动画
     private MyHandler mHandler;
 
     public DashboardView(Context context) {
@@ -682,9 +681,11 @@ public class DashboardView extends View {
     }
 
     public void setRealTimeValue(float realTimeValue) {
+        mHandler.preValue = mRealTimeValue;
         mRealTimeValue = realTimeValue;
         initSizes();
-        invalidate();
+        if (!mAnimEnable)
+            invalidate();
     }
 
     public int getStripeWidth() {
@@ -781,15 +782,6 @@ public class DashboardView extends View {
         }
     }
 
-    public void setAnimEnable(boolean animEnable, long animDuration) {
-        mAnimEnable = animEnable;
-        mAnimDuration = animDuration;
-        if (mAnimEnable) {
-            mHandler.endValue = mRealTimeValue;
-            mHandler.sendEmptyMessage(0);
-        }
-    }
-
     private int dpToPx(int dp) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());
     }
@@ -800,16 +792,20 @@ public class DashboardView extends View {
 
     private class MyHandler extends Handler {
 
-        float sum;
+        float preValue;
         float endValue;
 
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             if (msg.what == 0) {
-                sum += 2;
-                if (sum < endValue) {
-                    mRealTimeValue = sum;
+                if (preValue >= endValue) {
+                    preValue -= 2;
+                } else {
+                    preValue += 2;
+                }
+                if (Math.abs(preValue - endValue) > 2) {
+                    mRealTimeValue = preValue;
                     sendEmptyMessageDelayed(0, 10);
                 } else {
                     mRealTimeValue = endValue;
