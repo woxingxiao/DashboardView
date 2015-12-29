@@ -73,7 +73,7 @@ public class DashboardView extends View {
     private String[] mGraduations; // 等分的刻度值
     private float initAngle;
     private boolean textColorFlag = true; // 若不单独设置文字颜色，则文字和圆弧同色
-    private boolean mAnimEnable ; // 是否播放动画
+    private boolean mAnimEnable; // 是否播放动画
     private MyHandler mHandler;
 
     public DashboardView(Context context) {
@@ -244,13 +244,13 @@ public class DashboardView extends View {
         int heightSize = MeasureSpec.getSize(heightMeasureSpec);
 
         if (widthMode == MeasureSpec.EXACTLY) {
-            mViewWidth = dpToPx(widthSize);
+            mViewWidth = widthSize;
         } else {
             if (widthMode == MeasureSpec.AT_MOST)
                 mViewWidth = Math.min(mViewWidth, widthSize);
         }
         if (heightMode == MeasureSpec.EXACTLY) {
-            mViewHeight = dpToPx(heightSize);
+            mViewHeight = heightSize;
         } else {
             int totalRadius;
             if (mStripeMode == StripeMode.OUTER) {
@@ -681,11 +681,16 @@ public class DashboardView extends View {
     }
 
     public void setRealTimeValue(float realTimeValue) {
-        mHandler.preValue = mRealTimeValue;
         mRealTimeValue = realTimeValue;
         initSizes();
-        if (!mAnimEnable)
-            invalidate();
+        invalidate();
+    }
+
+    public void setRealTimeValueWithAnim(float realTimeValue) {
+        mHandler.preValue = mRealTimeValue;
+        mHandler.endValue = realTimeValue;
+        initSizes();
+        mHandler.sendEmptyMessage(0);
     }
 
     public int getStripeWidth() {
@@ -792,6 +797,7 @@ public class DashboardView extends View {
 
     private class MyHandler extends Handler {
 
+        int offset = 5;
         float preValue;
         float endValue;
 
@@ -800,11 +806,11 @@ public class DashboardView extends View {
             super.handleMessage(msg);
             if (msg.what == 0) {
                 if (preValue >= endValue) {
-                    preValue -= 2;
+                    preValue -= offset;
                 } else {
-                    preValue += 2;
+                    preValue += offset;
                 }
-                if (Math.abs(preValue - endValue) > 2) {
+                if (Math.abs(preValue - endValue) > offset) {
                     mRealTimeValue = preValue;
                     sendEmptyMessageDelayed(0, 10);
                 } else {
