@@ -19,12 +19,12 @@
         android:padding="@dimen/activity_horizontal_margin">
 
         <com.xw.example.dashboardviewdemo.DashboardView
-            android:id="@+id/dashboardView0"
+            android:id="@+id/default_dashboard_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
         <com.xw.example.dashboardviewdemo.DashboardView
-            android:id="@+id/dashboardView1"
+            android:id="@+id/dashboard_view_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:bigSliceCount="9"
@@ -39,7 +39,7 @@
             app:sweepAngle="120"/>
 
         <com.xw.example.dashboardviewdemo.DashboardView
-            android:id="@+id/dashboardView2"
+            android:id="@+id/dashboard_view_3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:bigSliceCount="12"
@@ -56,7 +56,7 @@
             app:sweepAngle="200"/>
 
         <com.xw.example.dashboardviewdemo.DashboardView
-            android:id="@+id/dashboardView3"
+            android:id="@+id/dashboard_view_4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
     </LinearLayout>
