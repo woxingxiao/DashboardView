@@ -3,6 +3,7 @@
 
 ##Usage
 >1
+
 ```xml
 <com.xw.example.dashboardviewdemo.DashboardView
     android:id="@+id/default_dashboard_view"
@@ -10,6 +11,7 @@
     android:layout_height="wrap_content"/>
 ```
 >2
+
 ```xml
 <com.xw.example.dashboardviewdemo.DashboardView
     android:id="@+id/dashboard_view_2"
@@ -33,6 +35,7 @@ highlight1.add(new HighlightCR(270, 60, Color.parseColor("#FFA000")));
 dashboardView2.setStripeHighlightColorAndRange(highlight1);
 ```
 >3
+
 ```xml
 <com.xw.example.dashboardviewdemo.DashboardView
     android:id="@+id/dashboard_view_3"
@@ -58,6 +61,7 @@ highlight2.add(new HighlightCR(310, 60, Color.parseColor("#795548")));
 dashboardView3.setStripeHighlightColorAndRange(highlight2);
 ```
 >4
+
 ```xml
 <com.xw.example.dashboardviewdemo.DashboardView
     android:id="@+id/dashboard_view_4"
