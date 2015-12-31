@@ -1,5 +1,6 @@
 ##Screenshot
-![img](https://github.com/woxingxiao/DashboardViewDemo/blob/master/Screenshot5.png)
+![img](https://github.com/woxingxiao/DashboardViewDemo/blob/master/screenshot/Screenshot5.png)
+![img](https://github.com/woxingxiao/DashboardViewDemo/blob/master/screenshot/Screenshot6.gif)
 
 ##Usage
 >1
@@ -33,6 +34,9 @@ List<HighlightCR> highlight1 = new ArrayList<>();
 highlight1.add(new HighlightCR(210, 60, Color.parseColor("#03A9F4")));
 highlight1.add(new HighlightCR(270, 60, Color.parseColor("#FFA000")));
 dashboardView2.setStripeHighlightColorAndRange(highlight1);
+
+// play animation
+dashboardView2.setRealTimeValueWithAnim(150.f);
 ```
 >3
 
