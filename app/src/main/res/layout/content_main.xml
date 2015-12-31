@@ -48,6 +48,7 @@
             app:maxValue="240"
             app:measureTextSize="10sp"
             app:radius="110dp"
+            app:sliceCountInOneBigSlice="2"
             app:realTimeValue="80"
             app:startAngle="170"
             app:stripeMode="inner"

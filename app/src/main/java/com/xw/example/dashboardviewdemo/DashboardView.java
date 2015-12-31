@@ -92,7 +92,7 @@ public class DashboardView extends View {
         mRadius = a.getDimensionPixelSize(R.styleable.DashboardView_radius, dpToPx(80));
         mStartAngle = a.getInteger(R.styleable.DashboardView_startAngle, 180);
         mSweepAngle = a.getInteger(R.styleable.DashboardView_sweepAngle, 180);
-        mBigSliceCount = a.getInteger(R.styleable.DashboardView_bigSliceCount, 5);
+        mBigSliceCount = a.getInteger(R.styleable.DashboardView_bigSliceCount, 10);
         mSliceCountInOneBigSlice = a.getInteger(R.styleable.DashboardView_sliceCountInOneBigSlice, 5);
         mArcColor = a.getColor(R.styleable.DashboardView_arcColor, Color.WHITE);
         mMeasureTextSize = a.getDimensionPixelSize(R.styleable.DashboardView_measureTextSize, spToPx(12));
@@ -171,13 +171,13 @@ public class DashboardView extends View {
         if (mSweepAngle > 360)
             throw new IllegalArgumentException("sweepAngle must less than 360 degree");
 
-        mSmallSliceRadius = mRadius - dpToPx(10);
-        mBigSliceRadius = mSmallSliceRadius - dpToPx(8);
-        mNumMeaRadius = mBigSliceRadius - dpToPx(2);
+        mSmallSliceRadius = mRadius - dpToPx(8);
+        mBigSliceRadius = mSmallSliceRadius - dpToPx(4);
+        mNumMeaRadius = mBigSliceRadius - dpToPx(3);
 
-        mSmallSliceCount = mBigSliceCount * 5;
+        mSmallSliceCount = mBigSliceCount * mSliceCountInOneBigSlice;
         mBigSliceAngle = mSweepAngle / (float) mBigSliceCount;
-        mSmallSliceAngle = mBigSliceAngle / mSliceCountInOneBigSlice;
+        mSmallSliceAngle = mBigSliceAngle / (float) mSliceCountInOneBigSlice;
         mGraduations = getMeasureNumbers();
 
         switch (mModeType) {
@@ -210,12 +210,12 @@ public class DashboardView extends View {
         }
         if ((mStartAngle <= 90 && mStartAngle + mSweepAngle >= 90) ||
                 (mStartAngle <= 270 && mStartAngle + mSweepAngle >= 270)) {
-            mViewHeight = totalRadius * 2 + getPaddingLeft() + getPaddingRight() + dpToPx(2) * 2;
+            mViewHeight = totalRadius * 2 + getPaddingTop() + getPaddingBottom() + dpToPx(2) * 2;
         } else {
             float[] point1 = getCoordinatePoint(totalRadius, mStartAngle);
             float[] point2 = getCoordinatePoint(totalRadius, mStartAngle + mSweepAngle);
             float max = Math.max(Math.abs(point1[1]), Math.abs(point2[1]));
-            mViewHeight = (int) (max * 2 + getPaddingLeft() + getPaddingRight() + dpToPx(2) * 2);
+            mViewHeight = (int) (max * 2 + getPaddingTop() + getPaddingBottom() + dpToPx(2) * 2);
         }
 
         mCenterX = mViewWidth / 2.0f;
@@ -344,9 +344,9 @@ public class DashboardView extends View {
             mPaintText.setTextSize(mMeasureTextSize);
             String number = mGraduations[i];
             mPaintText.getTextBounds(number, 0, number.length(), mRectMeasures);
-            if (angle % 360 > 135 && angle % 360 < 215) {
+            if (angle % 360 > 135 && angle % 360 < 225) {
                 mPaintText.setTextAlign(Paint.Align.LEFT);
-            } else if ((angle % 360 >= 0 && angle % 360 < 45) || (angle % 360 > 325 && angle % 360 <= 360)) {
+            } else if ((angle % 360 >= 0 && angle % 360 < 45) || (angle % 360 > 315 && angle % 360 <= 360)) {
                 mPaintText.setTextAlign(Paint.Align.RIGHT);
             } else {
                 mPaintText.setTextAlign(Paint.Align.CENTER);
@@ -452,7 +452,7 @@ public class DashboardView extends View {
      */
     private void drawPointer(Canvas canvas) {
         mPaintPointer.setStyle(Paint.Style.FILL);
-        mPaintPointer.setColor(mArcColor);
+        mPaintPointer.setColor(mTextColor);
         path.reset();
         float[] point1 = getCoordinatePoint(mCircleRadius / 2, initAngle + 90);
         path.moveTo(point1[0], point1[1]);

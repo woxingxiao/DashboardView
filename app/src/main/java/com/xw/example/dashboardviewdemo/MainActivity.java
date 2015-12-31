@@ -49,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
         dashboardView3.setCircleRadius(8);
         dashboardView3.setSweepAngle(240);
         dashboardView3.setBigSliceCount(12);
+        dashboardView3.setSliceCountInOneBigSlice(2);
         dashboardView3.setMaxValue(240);
         dashboardView3.setRealTimeValue(80);
         dashboardView3.setMeasureTextSize(14);
