@@ -26,8 +26,7 @@ public class MainActivity extends AppCompatActivity {
         dashboardView1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dashboardView1.setRealTimeValue(150.f);
-                dashboardView1.setAnimEnable(true);
+                dashboardView1.setRealTimeValue(150.f, true, 100);
             }
         });
 

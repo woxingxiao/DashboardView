@@ -73,8 +73,9 @@ public class DashboardView extends View {
     private String[] mGraduations; // 等分的刻度值
     private float initAngle;
     private boolean textColorFlag = true; // 若不单独设置文字颜色，则文字和圆弧同色
-    private boolean mAnimEnable ; // 是否播放动画
+    private boolean mAnimEnable; // 是否播放动画
     private MyHandler mHandler;
+    private long duration = 500; // 动画默认时长
 
     public DashboardView(Context context) {
         this(context, null);
@@ -681,11 +682,39 @@ public class DashboardView extends View {
     }
 
     public void setRealTimeValue(float realTimeValue) {
-        mHandler.preValue = mRealTimeValue;
         mRealTimeValue = realTimeValue;
         initSizes();
         if (!mAnimEnable)
             invalidate();
+    }
+
+    public void setRealTimeValue(float realTimeValue, boolean animEnable) {
+        mHandler.preValue = mRealTimeValue;
+        mAnimEnable = animEnable;
+        initSizes();
+        if (!mAnimEnable) {
+            invalidate();
+        } else {
+            mRealTimeValue = realTimeValue;
+            mHandler.endValue = realTimeValue;
+            mHandler.deltaValue = Math.abs(mHandler.endValue - mHandler.preValue);
+            mHandler.sendEmptyMessage(0);
+        }
+    }
+
+    public void setRealTimeValue(float realTimeValue, boolean animEnable, long duration) {
+        mHandler.preValue = mRealTimeValue;
+        mAnimEnable = animEnable;
+        initSizes();
+        if (!mAnimEnable) {
+            invalidate();
+        } else {
+            this.duration = duration;
+            mRealTimeValue = realTimeValue;
+            mHandler.endValue = realTimeValue;
+            mHandler.deltaValue = Math.abs(mHandler.endValue - mHandler.preValue);
+            mHandler.sendEmptyMessage(0);
+        }
     }
 
     public int getStripeWidth() {
@@ -774,14 +803,6 @@ public class DashboardView extends View {
         return mAnimEnable;
     }
 
-    public void setAnimEnable(boolean animEnable) {
-        mAnimEnable = animEnable;
-        if (mAnimEnable) {
-            mHandler.endValue = mRealTimeValue;
-            mHandler.sendEmptyMessage(0);
-        }
-    }
-
     private int dpToPx(int dp) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, getResources().getDisplayMetrics());
     }
@@ -794,19 +815,21 @@ public class DashboardView extends View {
 
         float preValue;
         float endValue;
+        float deltaValue;
 
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             if (msg.what == 0) {
-                if (preValue >= endValue) {
-                    preValue -= 2;
-                } else {
-                    preValue += 2;
+                if (preValue > endValue) {
+                    preValue -= 1;
+                } else if (preValue < endValue) {
+                    preValue += 1;
                 }
-                if (Math.abs(preValue - endValue) > 2) {
+                if (Math.abs(preValue - endValue) > 1) {
                     mRealTimeValue = preValue;
-                    sendEmptyMessageDelayed(0, 10);
+                    long t = (long) (duration / deltaValue);
+                    sendEmptyMessageDelayed(0, t);
                 } else {
                     mRealTimeValue = endValue;
                 }
