@@ -16,11 +16,6 @@ import android.view.View;
 
 import java.util.List;
 
-/**
- * 仪表盘View
- *
- * @author woxingxiao
- */
 public class DashboardView extends View {
 
     private int mRadius; // 圆弧半径
@@ -75,6 +70,7 @@ public class DashboardView extends View {
     private boolean textColorFlag = true; // 若不单独设置文字颜色，则文字和圆弧同色
     private boolean mAnimEnable; // 是否播放动画
     private MyHandler mHandler;
+    private long duration = 500; // 动画默认时长
 
     public DashboardView(Context context) {
         this(context, null);
@@ -683,14 +679,37 @@ public class DashboardView extends View {
     public void setRealTimeValue(float realTimeValue) {
         mRealTimeValue = realTimeValue;
         initSizes();
-        invalidate();
+        if (!mAnimEnable)
+            invalidate();
     }
 
-    public void setRealTimeValueWithAnim(float realTimeValue) {
+    public void setRealTimeValue(float realTimeValue, boolean animEnable) {
         mHandler.preValue = mRealTimeValue;
-        mHandler.endValue = realTimeValue;
+        mAnimEnable = animEnable;
         initSizes();
-        mHandler.sendEmptyMessage(0);
+        if (!mAnimEnable) {
+            invalidate();
+        } else {
+            mRealTimeValue = realTimeValue;
+            mHandler.endValue = realTimeValue;
+            mHandler.deltaValue = Math.abs(mHandler.endValue - mHandler.preValue);
+            mHandler.sendEmptyMessage(0);
+        }
+    }
+
+    public void setRealTimeValue(float realTimeValue, boolean animEnable, long duration) {
+        mHandler.preValue = mRealTimeValue;
+        mAnimEnable = animEnable;
+        initSizes();
+        if (!mAnimEnable) {
+            invalidate();
+        } else {
+            this.duration = duration;
+            mRealTimeValue = realTimeValue;
+            mHandler.endValue = realTimeValue;
+            mHandler.deltaValue = Math.abs(mHandler.endValue - mHandler.preValue);
+            mHandler.sendEmptyMessage(0);
+        }
     }
 
     public int getStripeWidth() {
@@ -797,22 +816,23 @@ public class DashboardView extends View {
 
     private class MyHandler extends Handler {
 
-        int offset = 5;
         float preValue;
         float endValue;
+        float deltaValue;
 
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             if (msg.what == 0) {
-                if (preValue >= endValue) {
-                    preValue -= offset;
-                } else {
-                    preValue += offset;
+                if (preValue > endValue) {
+                    preValue -= 1;
+                } else if (preValue < endValue) {
+                    preValue += 1;
                 }
-                if (Math.abs(preValue - endValue) > offset) {
+                if (Math.abs(preValue - endValue) > 1) {
                     mRealTimeValue = preValue;
-                    sendEmptyMessageDelayed(0, 10);
+                    long t = (long) (duration / deltaValue);
+                    sendEmptyMessageDelayed(0, t);
                 } else {
                     mRealTimeValue = endValue;
                 }
