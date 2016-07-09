@@ -2,6 +2,7 @@ package com.xw.example.dashboardviewdemo;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -10,6 +11,7 @@ import android.view.View;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,7 +28,11 @@ public class MainActivity extends AppCompatActivity {
         dashboardView1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dashboardView1.setRealTimeValue(150.f, true, 100);
+                Random random = new Random();
+                int ranValue = random.nextInt(dashboardView1.getMaxValue() - dashboardView1.getMinValue())
+                        + dashboardView1.getMinValue(); // 在取值范围内随机产生一个数
+
+                dashboardView1.setRealTimeValue(ranValue, true, 500);
             }
         });
 
@@ -41,9 +47,9 @@ public class MainActivity extends AppCompatActivity {
         dashboardView3.setStripeHighlightColorAndRange(highlight2);
 
         dashboardView4.setRadius(110);
-        dashboardView4.setArcColor(getResources().getColor(android.R.color.black));
+        dashboardView4.setArcColor(ContextCompat.getColor(this, android.R.color.black));
         dashboardView4.setTextColor(Color.parseColor("#212121"));
-        dashboardView4.setBgColor(getResources().getColor(android.R.color.white));
+        dashboardView4.setBgColor(ContextCompat.getColor(this, android.R.color.white));
         dashboardView4.setStartAngle(150);
         dashboardView4.setPointerRadius(80);
         dashboardView4.setCircleRadius(8);
