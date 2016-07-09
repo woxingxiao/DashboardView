@@ -1,6 +1,6 @@
 ##Screenshot
 ![img](https://github.com/woxingxiao/DashboardViewDemo/blob/master/screenshot/Screenshot5.png)
-![img](https://github.com/woxingxiao/DashboardViewDemo/blob/master/screenshot/Screenshot6.gif)
+![img](https://github.com/woxingxiao/DashboardViewDemo/blob/master/screenshot/Screenshot7.gif)
 
 ##Usage
 >1
