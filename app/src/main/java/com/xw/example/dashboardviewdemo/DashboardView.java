@@ -1,5 +1,8 @@
 package com.xw.example.dashboardviewdemo;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
@@ -8,14 +11,17 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.os.Handler;
-import android.os.Message;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
+import android.view.animation.Interpolator;
 
 import java.util.List;
 
+/**
+ * 自定义仪表盘View，仿汽车速度仪、刻度盘等，可自定义多种模式
+ * GitHub: https://github.com/woxingxiao/DashboardView
+ */
 public class DashboardView extends View {
 
     private int mRadius; // 圆弧半径
@@ -59,7 +65,7 @@ public class DashboardView extends View {
     private Rect mRectMeasures;
     private Rect mRectHeader;
     private Rect mRectRealText;
-    private Path path;
+    private Path mPath;
 
     private int mSmallSliceCount; // 短刻度个数
     private float mBigSliceAngle; // 大刻度等分角度
@@ -69,8 +75,8 @@ public class DashboardView extends View {
     private float initAngle;
     private boolean textColorFlag = true; // 若不单独设置文字颜色，则文字和圆弧同色
     private boolean mAnimEnable; // 是否播放动画
-    private MyHandler mHandler;
-    private long duration = 500; // 动画默认时长
+    private boolean isAnimFinished = true; // 动画是否播放完毕
+    private long mDuration = 500; // 动画默认时长
 
     public DashboardView(Context context) {
         this(context, null);
@@ -94,7 +100,9 @@ public class DashboardView extends View {
         mMeasureTextSize = a.getDimensionPixelSize(R.styleable.DashboardView_measureTextSize, spToPx(12));
         mTextColor = a.getColor(R.styleable.DashboardView_textColor, mArcColor);
         mHeaderTitle = a.getString(R.styleable.DashboardView_headerTitle);
-        if (mHeaderTitle == null) mHeaderTitle = "";
+        if (mHeaderTitle == null) {
+            mHeaderTitle = "";
+        }
         mHeaderTextSize = a.getDimensionPixelSize(R.styleable.DashboardView_headerTextSize, spToPx(14));
         mHeaderRadius = a.getDimensionPixelSize(R.styleable.DashboardView_headerRadius, mRadius / 3);
         mPointerRadius = a.getDimensionPixelSize(R.styleable.DashboardView_pointerRadius, mRadius / 3 * 2);
@@ -150,7 +158,7 @@ public class DashboardView extends View {
         mRectMeasures = new Rect();
         mRectHeader = new Rect();
         mRectRealText = new Rect();
-        path = new Path();
+        mPath = new Path();
 
         mPaintValue = new Paint();
         mPaintValue.setAntiAlias(true);
@@ -159,13 +167,12 @@ public class DashboardView extends View {
         mPaintValue.setTextAlign(Paint.Align.CENTER);
         mPaintValue.setTextSize(Math.max(mHeaderTextSize, mMeasureTextSize));
         mPaintValue.getTextBounds(trimFloat(mRealTimeValue), 0, trimFloat(mRealTimeValue).length(), mRectRealText);
-
-        mHandler = new MyHandler();
     }
 
     private void initSizes() {
-        if (mSweepAngle > 360)
+        if (mSweepAngle > 360) {
             throw new IllegalArgumentException("sweepAngle must less than 360 degree");
+        }
 
         mSmallSliceRadius = mRadius - dpToPx(8);
         mBigSliceRadius = mSmallSliceRadius - dpToPx(4);
@@ -242,8 +249,9 @@ public class DashboardView extends View {
         if (widthMode == MeasureSpec.EXACTLY) {
             mViewWidth = widthSize;
         } else {
-            if (widthMode == MeasureSpec.AT_MOST)
+            if (widthMode == MeasureSpec.AT_MOST) {
                 mViewWidth = Math.min(mViewWidth, widthSize);
+            }
         }
         if (heightMode == MeasureSpec.EXACTLY) {
             mViewHeight = heightSize;
@@ -265,8 +273,9 @@ public class DashboardView extends View {
                 float max = Math.max(maxY, f);
                 mViewHeight = (int) (max + totalRadius + getPaddingTop() + getPaddingBottom() + dpToPx(2) * 2);
             }
-            if (widthMode == MeasureSpec.AT_MOST)
+            if (widthMode == MeasureSpec.AT_MOST) {
                 mViewHeight = Math.min(mViewHeight, widthSize);
+            }
         }
 
         setMeasuredDimension(mViewWidth, mViewHeight);
@@ -275,7 +284,9 @@ public class DashboardView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        if (mBgColor != 0) canvas.drawColor(mBgColor);
+        if (mBgColor != 0) {
+            canvas.drawColor(mBgColor);
+        }
 
         drawStripe(canvas);
         drawMeasures(canvas);
@@ -291,8 +302,9 @@ public class DashboardView extends View {
         if (mStripeMode != StripeMode.NORMAL && mStripeHighlight != null) {
             for (int i = 0; i < mStripeHighlight.size(); i++) {
                 HighlightCR highlightCR = mStripeHighlight.get(i);
-                if (highlightCR.getColor() == 0 || highlightCR.getSweepAngle() == 0)
+                if (highlightCR.getColor() == 0 || highlightCR.getSweepAngle() == 0) {
                     continue;
+                }
 
                 mPaintStripe.setColor(highlightCR.getColor());
                 if (highlightCR.getStartAngle() + highlightCR.getSweepAngle() <= mStartAngle + mSweepAngle) {
@@ -321,8 +333,9 @@ public class DashboardView extends View {
             if (mStripeMode == StripeMode.NORMAL && mStripeHighlight != null) {
                 for (int j = 0; j < mStripeHighlight.size(); j++) {
                     HighlightCR highlightCR = mStripeHighlight.get(j);
-                    if (highlightCR.getColor() == 0 || highlightCR.getSweepAngle() == 0)
+                    if (highlightCR.getColor() == 0 || highlightCR.getSweepAngle() == 0) {
                         continue;
+                    }
 
                     if (angle <= highlightCR.getStartAngle() + highlightCR.getSweepAngle()) {
                         mPaintArc.setColor(highlightCR.getColor());
@@ -366,8 +379,9 @@ public class DashboardView extends View {
                 if (mStripeMode == StripeMode.NORMAL && mStripeHighlight != null) {
                     for (int j = 0; j < mStripeHighlight.size(); j++) {
                         HighlightCR highlightCR = mStripeHighlight.get(j);
-                        if (highlightCR.getColor() == 0 || highlightCR.getSweepAngle() == 0)
+                        if (highlightCR.getColor() == 0 || highlightCR.getSweepAngle() == 0) {
                             continue;
+                        }
 
                         if (angle <= highlightCR.getStartAngle() + highlightCR.getSweepAngle()) {
                             mPaintArc.setColor(highlightCR.getColor());
@@ -395,8 +409,9 @@ public class DashboardView extends View {
             if (mStripeHighlight != null) {
                 for (int i = 0; i < mStripeHighlight.size(); i++) {
                     HighlightCR highlightCR = mStripeHighlight.get(i);
-                    if (highlightCR.getColor() == 0 || highlightCR.getSweepAngle() == 0)
+                    if (highlightCR.getColor() == 0 || highlightCR.getSweepAngle() == 0) {
                         continue;
+                    }
 
                     mPaintArc.setColor(highlightCR.getColor());
                     if (highlightCR.getStartAngle() + highlightCR.getSweepAngle() <= mStartAngle + mSweepAngle) {
@@ -449,15 +464,15 @@ public class DashboardView extends View {
     private void drawPointer(Canvas canvas) {
         mPaintPointer.setStyle(Paint.Style.FILL);
         mPaintPointer.setColor(mTextColor);
-        path.reset();
+        mPath.reset();
         float[] point1 = getCoordinatePoint(mCircleRadius / 2, initAngle + 90);
-        path.moveTo(point1[0], point1[1]);
+        mPath.moveTo(point1[0], point1[1]);
         float[] point2 = getCoordinatePoint(mCircleRadius / 2, initAngle - 90);
-        path.lineTo(point2[0], point2[1]);
+        mPath.lineTo(point2[0], point2[1]);
         float[] point3 = getCoordinatePoint(mPointerRadius, initAngle);
-        path.lineTo(point3[0], point3[1]);
-        path.close();
-        canvas.drawPath(path, mPaintPointer);
+        mPath.lineTo(point3[0], point3[1]);
+        mPath.close();
+        canvas.drawPath(mPath, mPaintPointer);
         // 绘制三角形指针底部的圆弧效果
         canvas.drawCircle((point1[0] + point2[0]) / 2, (point1[1] + point2[1]) / 2,
                 mCircleRadius / 2, mPaintPointer);
@@ -503,8 +518,9 @@ public class DashboardView extends View {
      * 通过数值得到角度位置
      */
     private float getAngleFromResult(float result) {
-        if (result > mMaxValue)
+        if (result > mMaxValue) {
             return mMaxValue;
+        }
         return mSweepAngle * (result - mMinValue) / (mMaxValue - mMinValue) + mStartAngle;
     }
 
@@ -588,7 +604,6 @@ public class DashboardView extends View {
 
     public void setMeasureTextSize(int measureTextSize) {
         mMeasureTextSize = spToPx(measureTextSize);
-        initSizes();
         invalidate();
     }
 
@@ -618,7 +633,6 @@ public class DashboardView extends View {
 
     public void setHeaderTextSize(int headerTextSize) {
         mHeaderTextSize = spToPx(headerTextSize);
-        initSizes();
         invalidate();
     }
 
@@ -628,7 +642,6 @@ public class DashboardView extends View {
 
     public void setHeaderRadius(int headerRadius) {
         mHeaderRadius = dpToPx(headerRadius);
-        initSizes();
         invalidate();
     }
 
@@ -638,7 +651,6 @@ public class DashboardView extends View {
 
     public void setPointerRadius(int pointerRadius) {
         mPointerRadius = dpToPx(pointerRadius);
-        initSizes();
         invalidate();
     }
 
@@ -648,7 +660,6 @@ public class DashboardView extends View {
 
     public void setCircleRadius(int circleRadius) {
         mCircleRadius = dpToPx(circleRadius);
-        initSizes();
         invalidate();
     }
 
@@ -658,7 +669,6 @@ public class DashboardView extends View {
 
     public void setMinValue(int minValue) {
         mMinValue = minValue;
-        initSizes();
         invalidate();
     }
 
@@ -668,7 +678,6 @@ public class DashboardView extends View {
 
     public void setMaxValue(int maxValue) {
         mMaxValue = maxValue;
-        initSizes();
         invalidate();
     }
 
@@ -677,39 +686,54 @@ public class DashboardView extends View {
     }
 
     public void setRealTimeValue(float realTimeValue) {
-        mRealTimeValue = realTimeValue;
-        initSizes();
-        if (!mAnimEnable)
+        if (!mAnimEnable) {
             invalidate();
+        } else {
+            if (isAnimFinished) {
+                isAnimFinished = false;
+                playAnimation(realTimeValue);
+            }
+        }
     }
 
     public void setRealTimeValue(float realTimeValue, boolean animEnable) {
-        mHandler.preValue = mRealTimeValue;
         mAnimEnable = animEnable;
-        initSizes();
-        if (!mAnimEnable) {
-            invalidate();
-        } else {
-            mRealTimeValue = realTimeValue;
-            mHandler.endValue = realTimeValue;
-            mHandler.deltaValue = Math.abs(mHandler.endValue - mHandler.preValue);
-            mHandler.sendEmptyMessage(0);
-        }
+
+        setRealTimeValue(realTimeValue);
     }
 
     public void setRealTimeValue(float realTimeValue, boolean animEnable, long duration) {
-        mHandler.preValue = mRealTimeValue;
-        mAnimEnable = animEnable;
-        initSizes();
-        if (!mAnimEnable) {
-            invalidate();
-        } else {
-            this.duration = duration;
-            mRealTimeValue = realTimeValue;
-            mHandler.endValue = realTimeValue;
-            mHandler.deltaValue = Math.abs(mHandler.endValue - mHandler.preValue);
-            mHandler.sendEmptyMessage(0);
-        }
+        this.mDuration = duration;
+
+        setRealTimeValue(realTimeValue, animEnable);
+    }
+
+    private void playAnimation(float targetValue) {
+        ValueAnimator animator = ValueAnimator.ofFloat(mRealTimeValue, targetValue);
+        animator.setDuration(mDuration);
+        animator.setInterpolator(new PointerBounceInterpolator());
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                mRealTimeValue = (float) Math.ceil((float) animation.getAnimatedValue());
+                if (mRealTimeValue < mMinValue) {
+                    mRealTimeValue = mMinValue;
+                }
+                if (mRealTimeValue > mMaxValue) {
+                    mRealTimeValue = mMaxValue;
+                }
+                initAngle = getAngleFromResult(mRealTimeValue);
+                invalidate();
+            }
+        });
+        animator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                isAnimFinished = true;
+            }
+        });
+        animator.start();
     }
 
     public int getStripeWidth() {
@@ -800,10 +824,6 @@ public class DashboardView extends View {
 
     public void setAnimEnable(boolean animEnable) {
         mAnimEnable = animEnable;
-        if (mAnimEnable) {
-            mHandler.endValue = mRealTimeValue;
-            mHandler.sendEmptyMessage(0);
-        }
     }
 
     private int dpToPx(int dp) {
@@ -814,31 +834,13 @@ public class DashboardView extends View {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, getResources().getDisplayMetrics());
     }
 
-    private class MyHandler extends Handler {
-
-        float preValue;
-        float endValue;
-        float deltaValue;
+    public class PointerBounceInterpolator implements Interpolator {
 
         @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            if (msg.what == 0) {
-                if (preValue > endValue) {
-                    preValue -= 1;
-                } else if (preValue < endValue) {
-                    preValue += 1;
-                }
-                if (Math.abs(preValue - endValue) > 1) {
-                    mRealTimeValue = preValue;
-                    long t = (long) (duration / deltaValue);
-                    sendEmptyMessageDelayed(0, t);
-                } else {
-                    mRealTimeValue = endValue;
-                }
-                initAngle = getAngleFromResult(mRealTimeValue);
-                invalidate();
-            }
+        public float getInterpolation(float input) {
+            return (float) (Math.pow(2, -10 * input)
+                    * Math.sin((input - 0.4f / 4)
+                    * (2 * Math.PI) / 0.4f) + 1);
         }
     }
 
