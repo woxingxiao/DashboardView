@@ -687,7 +687,11 @@ public class DashboardView extends View {
 
     public void setRealTimeValue(float realTimeValue) {
         if (!mAnimEnable) {
-            invalidate();
+            if (mRealTimeValue != realTimeValue) {
+                mRealTimeValue = realTimeValue;
+                initAngle = getAngleFromResult(mRealTimeValue);
+                invalidate();
+            }
         } else {
             if (isAnimFinished) {
                 isAnimFinished = false;
