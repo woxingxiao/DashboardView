@@ -1,4 +1,4 @@
-package com.xw.example.dashboardviewdemo;
+package com.xw.sample.dashboardviewdemo;
 
 /**
  * HighlightColorAndRange

@@ -1,4 +1,4 @@
-package com.xw.example.dashboardviewdemo;
+package com.xw.sample.dashboardviewdemo;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
