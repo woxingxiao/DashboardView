@@ -6,10 +6,9 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -38,10 +37,9 @@ public class DashboardView1 extends View {
     private int mPLRadius; // 指针长半径
     private int mPSRadius; // 指针短半径
 
+    private int mPadding;
     private float mCenterX, mCenterY; // 圆心坐标
     private Paint mPaint;
-    private PorterDuffXfermode mPDXfermode_SRC_OVER; // 画笔重合覆盖
-    private PorterDuffXfermode mPDXfermode_XOR; // 画笔重合镂空
     private RectF mRectFArc;
     private Path mPath;
     private RectF mRectFInnerArc;
@@ -64,16 +62,13 @@ public class DashboardView1 extends View {
 
     private void init() {
         mStrokeWidth = dp2px(1);
-        mLength1 = dp2px(10) + mStrokeWidth;
-        mLength2 = dp2px(14) + mStrokeWidth;
+        mLength1 = dp2px(8) + mStrokeWidth;
+        mLength2 = mLength1 + dp2px(2);
         mPSRadius = dp2px(10);
 
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
         mPaint.setStrokeCap(Paint.Cap.ROUND);
-
-        mPDXfermode_SRC_OVER = new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER);
-        mPDXfermode_XOR = new PorterDuffXfermode(PorterDuff.Mode.XOR);
 
         mRectFArc = new RectF();
         mPath = new Path();
@@ -91,20 +86,33 @@ public class DashboardView1 extends View {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
+        mPadding = Math.max(
+                Math.max(getPaddingLeft(), getPaddingTop()),
+                Math.max(getPaddingRight(), getPaddingBottom())
+        );
+        setPadding(mPadding, mPadding, mPadding, mPadding);
+
         int width = resolveSize(dp2px(200), widthMeasureSpec);
-        mRadius = (width - getPaddingLeft() - getPaddingRight() - mStrokeWidth * 2) / 2;
+        mRadius = (width - mPadding * 2 - mStrokeWidth * 2) / 2;
 
         mPaint.setTextSize(sp2px(16));
         if (isShowValue) { // 显示实时读数，View高度增加字体高度3倍
-            mPaint.getTextBounds("x", 0, "x".length(), mRectText);
+            mPaint.getTextBounds("0", 0, "0".length(), mRectText);
         } else {
-            mPaint.getTextBounds("x", 0, 0, mRectText);
+            mPaint.getTextBounds("0", 0, 0, mRectText);
         }
-        // View高度由宽度自动确定
-        int height = mRadius + mStrokeWidth * 2 + mPSRadius + mRectText.height() * 3 +
-                getPaddingTop() + getPaddingBottom();
-
-        setMeasuredDimension(width, height);
+        // 由半径+指针短半径+实时读数文字高度确定的高度
+        int height1 = mRadius + mStrokeWidth * 2 + mPSRadius + mRectText.height() * 3;
+        // 由起始角度确定的高度
+        float[] point1 = getCoordinatePoint(mRadius, mStartAngle);
+        // 由结束角度确定的高度
+        float[] point2 = getCoordinatePoint(mRadius, mStartAngle + mSweepAngle);
+        // 取最大值
+        int max = (int) Math.max(
+                height1,
+                Math.max(point1[1] + mRadius + mStrokeWidth * 2, point2[1] + mRadius + mStrokeWidth * 2)
+        );
+        setMeasuredDimension(width, max + getPaddingTop() + getPaddingBottom());
 
         mCenterX = mCenterY = getWidth() / 2f;
         mRectFArc.set(
@@ -115,7 +123,7 @@ public class DashboardView1 extends View {
         );
 
         mPaint.setTextSize(sp2px(10));
-        mPaint.getTextBounds("x", 0, "x".length(), mRectText);
+        mPaint.getTextBounds("0", 0, "0".length(), mRectText);
         mRectFInnerArc.set(
                 getPaddingLeft() + mLength2 + mRectText.height(),
                 getPaddingTop() + mLength2 + mRectText.height(),
@@ -133,10 +141,9 @@ public class DashboardView1 extends View {
         /**
          * 画圆弧
          */
-        mPaint.setXfermode(mPDXfermode_SRC_OVER);
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeWidth(mStrokeWidth);
-        mPaint.setColor(Color.WHITE);
+        mPaint.setColor(ContextCompat.getColor(getContext(), R.color.colorPrimary));
         canvas.drawArc(mRectFArc, mStartAngle, mSweepAngle, false, mPaint);
 
         /**
@@ -145,10 +152,10 @@ public class DashboardView1 extends View {
          */
         double cos = Math.cos(Math.toRadians(mStartAngle - 180));
         double sin = Math.sin(Math.toRadians(mStartAngle - 180));
-        float x0 = (float) (mRadius * (1 - cos) + mStrokeWidth + mStrokeWidth / 2f);
-        float y0 = (float) (mRadius * (1 - sin) + mStrokeWidth);
-        float x1 = (float) (mRadius - (mRadius - mLength1) * cos + mStrokeWidth);
-        float y1 = (float) (mRadius - (mRadius - mLength1) * sin + mStrokeWidth);
+        float x0 = (float) (mPadding + mStrokeWidth + mRadius * (1 - cos));
+        float y0 = (float) (mPadding + mStrokeWidth + mRadius * (1 - sin));
+        float x1 = (float) (mPadding + mStrokeWidth + mRadius - (mRadius - mLength1) * cos);
+        float y1 = (float) (mPadding + mStrokeWidth + mRadius - (mRadius - mLength1) * sin);
 
         canvas.save();
         canvas.drawLine(x0, y0, x1, y1, mPaint);
@@ -165,8 +172,8 @@ public class DashboardView1 extends View {
          */
         canvas.save();
         mPaint.setStrokeWidth(1);
-        float x2 = (float) (mRadius - (mRadius - mLength1 / 2f) * cos + mStrokeWidth + mStrokeWidth / 2f);
-        float y2 = (float) (mRadius - (mRadius - mLength1 / 2f) * sin + mStrokeWidth);
+        float x2 = (float) (mPadding + mStrokeWidth + mRadius - (mRadius - mLength1 / 2f) * cos);
+        float y2 = (float) (mPadding + mStrokeWidth + mRadius - (mRadius - mLength1 / 2f) * sin);
         canvas.drawLine(x0, y0, x2, y2, mPaint);
         angle = mSweepAngle * 1f / (mSection * mPortion);
         for (int i = 1; i < mSection * mPortion; i++) {
@@ -231,16 +238,16 @@ public class DashboardView1 extends View {
         /**
          * 画指针围绕的镂空圆心
          */
-        mPaint.setXfermode(mPDXfermode_XOR);
+        mPaint.setColor(Color.WHITE);
         canvas.drawCircle(mCenterX, mCenterY, dp2px(2), mPaint);
 
         /**
          * 画实时度数值
          */
         if (isShowValue) {
-            mPaint.setXfermode(mPDXfermode_SRC_OVER);
-            mPaint.setTextAlign(Paint.Align.CENTER);
             mPaint.setTextSize(sp2px(16));
+            mPaint.setTextAlign(Paint.Align.CENTER);
+            mPaint.setColor(ContextCompat.getColor(getContext(), R.color.colorPrimary));
             String value = String.valueOf(mRealTimeValue);
             mPaint.getTextBounds(value, 0, value.length(), mRectText);
             canvas.drawText(value, mCenterX, mCenterY + mPSRadius + mRectText.height() * 2, mPaint);
