@@ -15,9 +15,6 @@ import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
-    private DashboardView1 mDashboardView1;
-    private DashboardView mDashboardView0;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -25,33 +22,24 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        mDashboardView1 = (DashboardView1) findViewById(R.id.dashboard_view_1);
-        mDashboardView0 = (DashboardView) findViewById(R.id.dashboard_view_2);
+        final DashboardView dashboardView1 = (DashboardView) findViewById(R.id.dashboard_view_2);
         DashboardView dashboardView3 = (DashboardView) findViewById(R.id.dashboard_view_3);
         DashboardView dashboardView4 = (DashboardView) findViewById(R.id.dashboard_view_4);
-        mDashboardView1.setOnClickListener(new View.OnClickListener() {
+        dashboardView1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Random random = new Random();
-                int ranValue = random.nextInt(100);
-                mDashboardView1.setRealTimeValue(ranValue);
-            }
-        });
-        mDashboardView0.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Random random = new Random();
-                int ranValue = random.nextInt(mDashboardView0.getMaxValue() - mDashboardView0.getMinValue())
-                        + mDashboardView0.getMinValue(); // 在取值范围内随机产生一个数
+                int ranValue = random.nextInt(dashboardView1.getMaxValue() - dashboardView1.getMinValue())
+                        + dashboardView1.getMinValue(); // 在取值范围内随机产生一个数
 
-                mDashboardView0.setRealTimeValue(ranValue, true, 500);
+                dashboardView1.setRealTimeValue(ranValue, true, 500);
             }
         });
 
         List<HighlightCR> highlight1 = new ArrayList<>();
         highlight1.add(new HighlightCR(210, 60, Color.parseColor("#03A9F4")));
         highlight1.add(new HighlightCR(270, 60, Color.parseColor("#FFA000")));
-        mDashboardView0.setStripeHighlightColorAndRange(highlight1);
+        dashboardView1.setStripeHighlightColorAndRange(highlight1);
 
         List<HighlightCR> highlight2 = new ArrayList<>();
         highlight2.add(new HighlightCR(170, 140, Color.parseColor("#607D8B")));
