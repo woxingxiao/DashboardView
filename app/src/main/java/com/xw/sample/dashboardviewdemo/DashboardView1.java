@@ -178,7 +178,7 @@ public class DashboardView1 extends View {
         angle = mSweepAngle * 1f / (mSection * mPortion);
         for (int i = 1; i < mSection * mPortion; i++) {
             canvas.rotate(angle, mCenterX, mCenterY);
-            if (i % mSection == 0) { // 避免与长刻度画重合
+            if (i % mPortion == 0) { // 避免与长刻度画重合
                 continue;
             }
             canvas.drawLine(x0, y0, x2, y2, mPaint);

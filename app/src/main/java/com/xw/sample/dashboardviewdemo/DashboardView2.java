@@ -9,7 +9,6 @@ import android.graphics.Path;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.support.v4.content.ContextCompat;
-import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
@@ -91,7 +90,7 @@ public class DashboardView2 extends View {
         mLength1 = mPadding + mCalibrationWidth / 2 + dp2px(5);
         mLength2 = mLength1 + mCalibrationWidth + dp2px(1) + dp2px(5);
 
-        int width = resolveSize(dp2px(200), widthMeasureSpec);
+        int width = resolveSize(dp2px(210), widthMeasureSpec);
         mRadius = (width - mPadding * 2 - mProgressWidth * 2) / 2;
 
         // 高度由信用值文字高度的一半（被圆心平分）+ 信用描述 + 评估时间 + 三行文字间各自间距 确定
@@ -139,20 +138,26 @@ public class DashboardView2 extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        canvas.drawColor(ContextCompat.getColor(getContext(), R.color.color_green));
+
         /**
          * 画进度圆弧
          */
+        mPaint.setStrokeCap(Paint.Cap.ROUND);
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeWidth(mProgressWidth);
-        mPaint.setAlpha(150);
         mPaint.setColor(Color.WHITE);
+        mPaint.setAlpha(100);
         canvas.drawArc(mRectFProgressArc, mStartAngle, mSweepAngle, false, mPaint);
 
         /**
          * 画刻度圆弧
          */
+        mPaint.setStrokeCap(Paint.Cap.SQUARE);
         mPaint.setStrokeWidth(mCalibrationWidth);
-        canvas.drawArc(mRectFCalibrationFArc, mStartAngle, mSweepAngle, false, mPaint);
+        float α = (float) (180 * (mCalibrationWidth - dp2px(2)) / 2f /
+                (Math.PI * (mRadius - mLength1 - (mCalibrationWidth - dp2px(2)) / 2f)));
+        canvas.drawArc(mRectFCalibrationFArc, mStartAngle + α, mSweepAngle - 2 * α, false, mPaint);
 
         /**
          * 画长刻度
@@ -160,11 +165,13 @@ public class DashboardView2 extends View {
          */
         double cos = Math.cos(Math.toRadians(mStartAngle - 180));
         double sin = Math.sin(Math.toRadians(mStartAngle - 180));
-        float x0 = (float) (mLength1 + mRadius * (1 - cos));
-        float y0 = (float) (mLength1 + mRadius * (1 - sin));
+        float x0 = (float) (mPadding + mRadius - (mRadius - mLength1 - dp2px(1)) * cos);
+        float y0 = (float) (mPadding + mRadius + dp2px(2) - (mRadius - mLength1) * sin);
         float x1 = (float) (mPadding + mRadius - (mRadius - mLength1 - mCalibrationWidth - dp2px(1)) * cos);
-        float y1 = (float) (mPadding + mRadius - (mRadius - mLength1 - mCalibrationWidth - dp2px(1)) * sin);
-
+        float y1 = (float) (mPadding + mRadius + dp2px(2) - (mRadius - mLength1 - mCalibrationWidth) * sin);
+        mPaint.setStrokeCap(Paint.Cap.ROUND);
+        mPaint.setStrokeWidth(dp2px(2));
+        mPaint.setAlpha(120);
         canvas.save();
         canvas.drawLine(x0, y0, x1, y1, mPaint);
         float angle = mSweepAngle * 1f / mSection;
@@ -179,15 +186,15 @@ public class DashboardView2 extends View {
          * 同样采用canvas的旋转原理
          */
         canvas.save();
-        mPaint.setStrokeWidth(1);
+        mPaint.setStrokeWidth(dp2px(1));
         mPaint.setAlpha(100);
         float x2 = (float) (mPadding + mRadius - (mRadius - mLength1 - mCalibrationWidth) * cos);
-        float y2 = (float) (mPadding + mRadius - (mRadius - mLength1 - mCalibrationWidth) * sin);
+        float y2 = (float) (mPadding + mRadius + dp2px(2) - (mRadius - mLength1 - mCalibrationWidth) * sin);
         canvas.drawLine(x0, y0, x2, y2, mPaint);
         angle = mSweepAngle * 1f / (mSection * mPortion);
         for (int i = 1; i < mSection * mPortion; i++) {
             canvas.rotate(angle, mCenterX, mCenterY);
-            if (i % mSection == 0) { // 避免与长刻度画重合
+            if (i % mPortion == 0) {
                 continue;
             }
             canvas.drawLine(x0, y0, x2, y2, mPaint);
@@ -201,6 +208,7 @@ public class DashboardView2 extends View {
         mPaint.setTextSize(sp2px(10));
         mPaint.setTextAlign(Paint.Align.LEFT);
         mPaint.setStyle(Paint.Style.FILL);
+        mPaint.setAlpha(150);
         for (int i = 0; i < mTexts.length; i++) {
             mPaint.getTextBounds(mTexts[i], 0, mTexts[i].length(), mRectText);
             // 粗略把文字的宽度视为圆心角2*θ对应的弧长，利用弧长公式得到θ，下面用于修正角度
@@ -217,25 +225,42 @@ public class DashboardView2 extends View {
         }
 
         /**
-         * 画表头
-         * 没有表头就不画
-         */
-        if (!TextUtils.isEmpty(mHeaderText)) {
-            mPaint.setTextSize(sp2px(14));
-            mPaint.setTextAlign(Paint.Align.CENTER);
-            mPaint.getTextBounds(mHeaderText, 0, mHeaderText.length(), mRectText);
-            canvas.drawText(mHeaderText, mCenterX, mCenterY / 2f + mRectText.height(), mPaint);
-        }
-
-        /**
          * 画实时度数值
          */
-        mPaint.setTextSize(sp2px(16));
+        mPaint.setAlpha(255);
+        mPaint.setTextSize(sp2px(45));
         mPaint.setTextAlign(Paint.Align.CENTER);
-        mPaint.setColor(ContextCompat.getColor(getContext(), R.color.colorPrimary));
-        String value = String.valueOf(mRealTimeValue);
+        String value = String.valueOf(610);
         mPaint.getTextBounds(value, 0, value.length(), mRectText);
-        canvas.drawText(value, mCenterX, mCenterY + mRectText.height() * 2, mPaint);
+        float h = mRectText.height() / 2f;
+        canvas.drawText(value, mCenterX, mCenterY + h, mPaint);
+        h = mRectText.height() / 2f;
+
+        /**
+         * 画表头
+         */
+        mPaint.setAlpha(150);
+        mPaint.setTextSize(sp2px(12));
+        canvas.drawText(mHeaderText, mCenterX, mCenterY - h - dp2px(10), mPaint);
+
+        /**
+         * 画信用描述
+         */
+        mPaint.setAlpha(255);
+        mPaint.setTextSize(sp2px(20));
+        mPaint.getTextBounds(value, 0, value.length(), mRectText);
+        h += dp2px(15) + mRectText.height() / 2f;
+        canvas.drawText("信用良好", mCenterX, mCenterY + h, mPaint);
+        h += mRectText.height() / 2f;
+
+        /**
+         * 画评估时间
+         */
+        mPaint.setAlpha(150);
+        mPaint.setTextSize(sp2px(10));
+        mPaint.getTextBounds(value, 0, value.length(), mRectText);
+        h += dp2px(5) + mRectText.height() / 2f;
+        canvas.drawText("评估时间:2016.11.23", mCenterX, mCenterY + h, mPaint);
     }
 
     private int dp2px(int dp) {
