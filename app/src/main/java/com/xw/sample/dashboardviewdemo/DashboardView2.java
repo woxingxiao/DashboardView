@@ -1,39 +1,52 @@
 package com.xw.sample.dashboardviewdemo;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.RadialGradient;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Shader;
+import android.graphics.SweepGradient;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
+import android.view.animation.LinearInterpolator;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 /**
- * DashboardView style 2
+ * DashboardView style 2 仿芝麻信用分
  * Created by woxingxiao on 2016-11-19.
  */
 
 public class DashboardView2 extends View {
 
-    private int mRadius; // 扇形半径
+    private int mRadius; // 画布边缘半径（去除padding后的半径）
     private int mStartAngle = 150; // 起始角度
     private int mSweepAngle = 240; // 绘制角度
-    private int mMin = 0; // 最小值
-    private int mMax = 100; // 最大值
+    private int mMin = 350; // 最小值
+    private int mMax = 950; // 最大值
     private int mSection = 10; // 值域（mMax-mMin）等分份数
     private int mPortion = 3; // 一个mSection等分份数
     private String mHeaderText = "BETA"; // 表头
-    private int mRealTimeValue = mMin; // 实时读数
+    private int mCreditValue = 650; // 信用分
+    private int mSolidCreditValue = mCreditValue; // 信用分(设定后不变)
     private int mSparkleWidth; // 亮点宽度
     private int mProgressWidth; // 进度圆弧宽度
-    private int mLength1; // 刻度顶部相对边缘的长度
+    private float mLength1; // 刻度顶部相对边缘的长度
     private int mCalibrationWidth; // 刻度圆弧宽度
-    private int mLength2; // 刻度读数顶部相对边缘的长度
+    private float mLength2; // 刻度读数顶部相对边缘的长度
 
     private int mPadding;
     private float mCenterX, mCenterY; // 圆心坐标
@@ -60,8 +73,8 @@ public class DashboardView2 extends View {
     }
 
     private void init() {
-        mSparkleWidth = dp2px(6);
-        mProgressWidth = dp2px(2);
+        mSparkleWidth = dp2px(10);
+        mProgressWidth = dp2px(3);
         mCalibrationWidth = dp2px(10);
 
         mPaint = new Paint();
@@ -87,41 +100,27 @@ public class DashboardView2 extends View {
         );
         setPadding(mPadding, mPadding, mPadding, mPadding);
 
-        mLength1 = mPadding + mCalibrationWidth / 2 + dp2px(5);
+        mLength1 = mPadding + mSparkleWidth / 2f + dp2px(8);
         mLength2 = mLength1 + mCalibrationWidth + dp2px(1) + dp2px(5);
 
-        int width = resolveSize(dp2px(210), widthMeasureSpec);
-        mRadius = (width - mPadding * 2 - mProgressWidth * 2) / 2;
+        int width = resolveSize(dp2px(220), widthMeasureSpec);
+        mRadius = (width - mPadding * 2) / 2;
 
-        // 高度由信用值文字高度的一半（被圆心平分）+ 信用描述 + 评估时间 + 三行文字间各自间距 确定
-        int height = mRadius + mProgressWidth * 2;
-        mPaint.setTextSize(sp2px(40));
-        mPaint.getTextBounds("0", 0, "0".length(), mRectText);
-        height += mRectText.height() / 2;
-
-        mPaint.setTextSize(sp2px(30));
-        mPaint.getTextBounds("0", 0, "0".length(), mRectText);
-        height += dp2px(16) + mRectText.height();
-
-        mPaint.setTextSize(sp2px(10));
-        mPaint.getTextBounds("0", 0, "0".length(), mRectText);
-        height += dp2px(8) + mRectText.height();
-
-        setMeasuredDimension(width, height + getPaddingTop() + getPaddingBottom());
+        setMeasuredDimension(width, width - dp2px(30));
 
         mCenterX = mCenterY = getWidth() / 2f;
         mRectFProgressArc.set(
-                mPadding + mSparkleWidth / 2,
-                mPadding + mSparkleWidth / 2,
-                getWidth() - mPadding - mSparkleWidth / 2,
-                getWidth() - mPadding - mSparkleWidth / 2
+                mPadding + mSparkleWidth / 2f,
+                mPadding + mSparkleWidth / 2f,
+                getWidth() - mPadding - mSparkleWidth / 2f,
+                getWidth() - mPadding - mSparkleWidth / 2f
         );
 
         mRectFCalibrationFArc.set(
-                mLength1 + mCalibrationWidth / 2,
-                mLength1 + mCalibrationWidth / 2,
-                getWidth() - mLength1 - mCalibrationWidth / 2,
-                getWidth() - mLength1 - mCalibrationWidth / 2
+                mLength1 + mCalibrationWidth / 2f,
+                mLength1 + mCalibrationWidth / 2f,
+                getWidth() - mLength1 - mCalibrationWidth / 2f,
+                getWidth() - mLength1 - mCalibrationWidth / 2f
         );
 
         mPaint.setTextSize(sp2px(10));
@@ -141,37 +140,57 @@ public class DashboardView2 extends View {
         canvas.drawColor(ContextCompat.getColor(getContext(), R.color.color_green));
 
         /**
-         * 画进度圆弧
+         * 画进度圆弧(信用值到结束)
          */
         mPaint.setStrokeCap(Paint.Cap.ROUND);
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeWidth(mProgressWidth);
-        mPaint.setColor(Color.WHITE);
-        mPaint.setAlpha(100);
-        canvas.drawArc(mRectFProgressArc, mStartAngle, mSweepAngle, false, mPaint);
+        mPaint.setAlpha(80);
+        float α = mStartAngle + calculateRelativeAngleWithValue(mCreditValue);
+        canvas.drawArc(mRectFProgressArc, α, (mStartAngle + mSweepAngle) - α - 1, false, mPaint);
+        /**
+         * 画进度圆弧(起始到信用值)
+         */
+        mPaint.setAlpha(255);
+        mPaint.setShader(generateSweepGradient());
+        canvas.drawArc(mRectFProgressArc, mStartAngle + 1, calculateRelativeAngleWithValue(mCreditValue) - 2, false, mPaint);
+        /**
+         * 画信用值指示亮点
+         */
+        float[] point = getCoordinatePoint(
+                mRadius - mSparkleWidth / 2f,
+                mStartAngle + calculateRelativeAngleWithValue(mCreditValue)
+        );
+        mPaint.setStyle(Paint.Style.FILL);
+        mPaint.setShader(generateRadialGradient(point[0], point[1]));
+        canvas.drawCircle(point[0], point[1], mSparkleWidth / 2f, mPaint);
 
         /**
          * 画刻度圆弧
          */
+        mPaint.setShader(null);
+        mPaint.setStyle(Paint.Style.STROKE);
+        mPaint.setColor(Color.WHITE);
+        mPaint.setAlpha(80);
         mPaint.setStrokeCap(Paint.Cap.SQUARE);
         mPaint.setStrokeWidth(mCalibrationWidth);
-        float α = (float) (180 * (mCalibrationWidth - dp2px(2)) / 2f /
+        float β = (float) (180 * (mCalibrationWidth - dp2px(2)) / 2f /
                 (Math.PI * (mRadius - mLength1 - (mCalibrationWidth - dp2px(2)) / 2f)));
-        canvas.drawArc(mRectFCalibrationFArc, mStartAngle + α, mSweepAngle - 2 * α, false, mPaint);
+        canvas.drawArc(mRectFCalibrationFArc, mStartAngle + β, mSweepAngle - 2 * β, false, mPaint);
 
         /**
          * 画长刻度
          * 画好起始角度的一条刻度后通过canvas绕着原点旋转来画剩下的长刻度
          */
-        double cos = Math.cos(Math.toRadians(mStartAngle - 180));
-        double sin = Math.sin(Math.toRadians(mStartAngle - 180));
-        float x0 = (float) (mPadding + mRadius - (mRadius - mLength1 - dp2px(1)) * cos);
-        float y0 = (float) (mPadding + mRadius + dp2px(2) - (mRadius - mLength1) * sin);
-        float x1 = (float) (mPadding + mRadius - (mRadius - mLength1 - mCalibrationWidth - dp2px(1)) * cos);
-        float y1 = (float) (mPadding + mRadius + dp2px(2) - (mRadius - mLength1 - mCalibrationWidth) * sin);
         mPaint.setStrokeCap(Paint.Cap.ROUND);
         mPaint.setStrokeWidth(dp2px(2));
         mPaint.setAlpha(120);
+        double cos = Math.cos(Math.toRadians(mStartAngle - 180));
+        double sin = Math.sin(Math.toRadians(mStartAngle - 180));
+        float x0 = (float) (mPadding + mRadius - (mRadius - mLength1 - dp2px(2) / 2f) * cos);
+        float y0 = (float) (mPadding + mRadius - (mRadius - mLength1 - dp2px(2) / 2f) * sin);
+        float x1 = (float) (mPadding + mRadius - (mRadius - mLength1 - mCalibrationWidth - dp2px(1)) * cos);
+        float y1 = (float) (mPadding + mRadius - (mRadius - mLength1 - mCalibrationWidth - dp2px(1)) * sin);
         canvas.save();
         canvas.drawLine(x0, y0, x1, y1, mPaint);
         float angle = mSweepAngle * 1f / mSection;
@@ -187,17 +206,19 @@ public class DashboardView2 extends View {
          */
         canvas.save();
         mPaint.setStrokeWidth(dp2px(1));
-        mPaint.setAlpha(100);
-        float x2 = (float) (mPadding + mRadius - (mRadius - mLength1 - mCalibrationWidth) * cos);
-        float y2 = (float) (mPadding + mRadius + dp2px(2) - (mRadius - mLength1 - mCalibrationWidth) * sin);
-        canvas.drawLine(x0, y0, x2, y2, mPaint);
+        mPaint.setAlpha(80);
+        float x2 = (float) (mPadding + mRadius - (mRadius - mLength1 - dp2px(1) / 2f) * cos);
+        float y2 = (float) (mPadding + mRadius - (mRadius - mLength1 - dp2px(1) / 2f) * sin);
+        float x3 = (float) (mPadding + mRadius - (mRadius - mLength1 - mCalibrationWidth + dp2px(1) / 2f) * cos);
+        float y3 = (float) (mPadding + mRadius - (mRadius - mLength1 - mCalibrationWidth + dp2px(1) / 2f) * sin);
+        canvas.drawLine(x2, y2, x3, y3, mPaint);
         angle = mSweepAngle * 1f / (mSection * mPortion);
         for (int i = 1; i < mSection * mPortion; i++) {
             canvas.rotate(angle, mCenterX, mCenterY);
             if (i % mPortion == 0) {
                 continue;
             }
-            canvas.drawLine(x0, y0, x2, y2, mPaint);
+            canvas.drawLine(x2, y2, x3, y3, mPaint);
         }
         canvas.restore();
 
@@ -208,7 +229,7 @@ public class DashboardView2 extends View {
         mPaint.setTextSize(sp2px(10));
         mPaint.setTextAlign(Paint.Align.LEFT);
         mPaint.setStyle(Paint.Style.FILL);
-        mPaint.setAlpha(150);
+        mPaint.setAlpha(200);
         for (int i = 0; i < mTexts.length; i++) {
             mPaint.getTextBounds(mTexts[i], 0, mTexts[i].length(), mRectText);
             // 粗略把文字的宽度视为圆心角2*θ对应的弧长，利用弧长公式得到θ，下面用于修正角度
@@ -228,39 +249,31 @@ public class DashboardView2 extends View {
          * 画实时度数值
          */
         mPaint.setAlpha(255);
-        mPaint.setTextSize(sp2px(45));
+        mPaint.setTextSize(sp2px(50));
         mPaint.setTextAlign(Paint.Align.CENTER);
-        String value = String.valueOf(610);
-        mPaint.getTextBounds(value, 0, value.length(), mRectText);
-        float h = mRectText.height() / 2f;
-        canvas.drawText(value, mCenterX, mCenterY + h, mPaint);
-        h = mRectText.height() / 2f;
+        String value = String.valueOf(mSolidCreditValue);
+        canvas.drawText(value, mCenterX, mCenterY + dp2px(30), mPaint);
 
         /**
          * 画表头
          */
-        mPaint.setAlpha(150);
+        mPaint.setAlpha(200);
         mPaint.setTextSize(sp2px(12));
-        canvas.drawText(mHeaderText, mCenterX, mCenterY - h - dp2px(10), mPaint);
+        canvas.drawText(mHeaderText, mCenterX, mCenterY - dp2px(20), mPaint);
 
         /**
          * 画信用描述
          */
         mPaint.setAlpha(255);
-        mPaint.setTextSize(sp2px(20));
-        mPaint.getTextBounds(value, 0, value.length(), mRectText);
-        h += dp2px(15) + mRectText.height() / 2f;
-        canvas.drawText("信用良好", mCenterX, mCenterY + h, mPaint);
-        h += mRectText.height() / 2f;
+        mPaint.setTextSize(sp2px(25));
+        canvas.drawText(calculateCreditDescription(), mCenterX, mCenterY + dp2px(60), mPaint);
 
         /**
          * 画评估时间
          */
-        mPaint.setAlpha(150);
+        mPaint.setAlpha(200);
         mPaint.setTextSize(sp2px(10));
-        mPaint.getTextBounds(value, 0, value.length(), mRectText);
-        h += dp2px(5) + mRectText.height() / 2f;
-        canvas.drawText("评估时间:2016.11.23", mCenterX, mCenterY + h, mPaint);
+        canvas.drawText(getFormatTimeStr(), mCenterX, mCenterY + dp2px(75), mPaint);
     }
 
     private int dp2px(int dp) {
@@ -273,7 +286,27 @@ public class DashboardView2 extends View {
                 Resources.getSystem().getDisplayMetrics());
     }
 
-    public float[] getCoordinatePoint(int radius, float angle) {
+    private SweepGradient generateSweepGradient() {
+        SweepGradient sweepGradient = new SweepGradient(mCenterX, mCenterY,
+                new int[]{Color.argb(80, 255, 255, 255), Color.argb(200, 255, 255, 255)},
+                new float[]{0, calculateRelativeAngleWithValue(mCreditValue) / 360}
+        );
+        Matrix matrix = new Matrix();
+        matrix.setRotate(mStartAngle - 1, mCenterX, mCenterY);
+        sweepGradient.setLocalMatrix(matrix);
+
+        return sweepGradient;
+    }
+
+    private RadialGradient generateRadialGradient(float x, float y) {
+        return new RadialGradient(x, y, mSparkleWidth / 2f,
+                new int[]{Color.argb(255, 255, 255, 255), Color.argb(80, 255, 255, 255)},
+                new float[]{0, 1},
+                Shader.TileMode.CLAMP
+        );
+    }
+
+    private float[] getCoordinatePoint(float radius, float angle) {
         float[] point = new float[2];
 
         double arcAngle = Math.toRadians(angle); //将角度转换为弧度
@@ -306,16 +339,108 @@ public class DashboardView2 extends View {
         return point;
     }
 
-    public int getRealTimeValue() {
-        return mRealTimeValue;
+    /**
+     * 相对起始角度计算信用分所对应的角度大小
+     */
+    private float calculateRelativeAngleWithValue(int value) {
+        float anglePerSection = 1f * mSweepAngle / mSection;
+
+        if (value >= 350 && value <= 550) {
+            return 2 * anglePerSection / 200 * (value - 350);
+        } else if (value > 550 && value <= 600) {
+            return 2 * anglePerSection + 2 * anglePerSection / 50 * (value - 550);
+        } else if (value > 600 && value <= 650) {
+            return 4 * anglePerSection + 2 * anglePerSection / 50 * (value - 600);
+        } else if (value > 650 && value <= 700) {
+            return 6 * anglePerSection + 2 * anglePerSection / 50 * (value - 650);
+        } else if (value > 700 && value <= 950) {
+            return 8 * anglePerSection + 2 * anglePerSection / 250 * (value - 700);
+        }
+
+        return mMin;
     }
 
-    public void setRealTimeValue(int realTimeValue) {
-        if (mRealTimeValue == realTimeValue || realTimeValue < mMin || realTimeValue > mMax) {
+    /**
+     * 信用分对应信用描述
+     */
+    private String calculateCreditDescription() {
+        if (mSolidCreditValue > 700) {
+            return "信用极好";
+        } else if (mSolidCreditValue > 650) {
+            return "信用优秀";
+
+        } else if (mSolidCreditValue > 600) {
+            return "信用良好";
+
+        } else if (mSolidCreditValue > 550) {
+            return "信用中等";
+
+        }
+        return "信用较差";
+    }
+
+    private SimpleDateFormat mDateFormat;
+
+    private String getFormatTimeStr() {
+        if (mDateFormat == null) {
+            mDateFormat = new SimpleDateFormat("yyyy.MM.dd", Locale.CHINA);
+        }
+        return String.format("评估时间:%s", mDateFormat.format(new Date()));
+    }
+
+    public int getCreditValue() {
+        return mCreditValue;
+    }
+
+    public void setCreditValue(int creditValue) {
+        if (mSolidCreditValue == creditValue || creditValue < mMin || creditValue > mMax) {
             return;
         }
 
-        mRealTimeValue = realTimeValue;
+        mSolidCreditValue = creditValue;
+        mCreditValue = creditValue;
         postInvalidate();
     }
+
+    boolean isAnimFinish = true;
+
+    public void setCreditValueWithAnim(int creditValue) {
+        if (mSolidCreditValue == creditValue || creditValue < mMin || creditValue > mMax || !isAnimFinish) {
+            return;
+        }
+
+        mSolidCreditValue = creditValue;
+
+        ValueAnimator valueAnimator = ValueAnimator.ofInt(350, mSolidCreditValue);
+        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                mCreditValue = (int) animation.getAnimatedValue();
+                postInvalidate();
+            }
+        });
+        valueAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                super.onAnimationStart(animation);
+                isAnimFinish = false;
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                isAnimFinish = true;
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                super.onAnimationCancel(animation);
+                isAnimFinish = true;
+            }
+        });
+        valueAnimator.setInterpolator(new LinearInterpolator());
+        valueAnimator.setDuration(2000);
+        valueAnimator.start();
+    }
+
 }

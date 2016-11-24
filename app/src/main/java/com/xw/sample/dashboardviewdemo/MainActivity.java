@@ -13,7 +13,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+
+    private DashboardView1 mDashboardView1;
+    private DashboardView2 mDashboardView2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,9 +25,15 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        final DashboardView dashboardView1 = (DashboardView) findViewById(R.id.dashboard_view_2);
+        mDashboardView1 = (DashboardView1) findViewById(R.id.dashboard_view_1);
+        mDashboardView2 = (DashboardView2) findViewById(R.id.dashboard_view_2);
+        final DashboardView dashboardView1 = (DashboardView) findViewById(R.id.dashboard_view_2_);
         DashboardView dashboardView3 = (DashboardView) findViewById(R.id.dashboard_view_3);
         DashboardView dashboardView4 = (DashboardView) findViewById(R.id.dashboard_view_4);
+
+        mDashboardView1.setOnClickListener(this);
+        mDashboardView2.setOnClickListener(this);
+
         dashboardView1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -69,6 +78,8 @@ public class MainActivity extends AppCompatActivity {
         highlight3.add(new HighlightCR(330, 60, Color.parseColor("#F44336")));
         dashboardView4.setStripeHighlightColorAndRange(highlight3);
 
+        mDashboardView2.setCreditValueWithAnim(new Random().nextInt(600) + 350);
+
     }
 
     @Override
@@ -92,4 +103,19 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.dashboard_view_1:
+                mDashboardView1.setRealTimeValue(new Random().nextInt(100));
+
+                break;
+            case R.id.dashboard_view_2:
+                mDashboardView2.setCreditValueWithAnim(new Random().nextInt(950 - 350) + 350);
+
+                break;
+        }
+    }
+
 }

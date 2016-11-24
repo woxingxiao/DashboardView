@@ -19,10 +19,12 @@
         android:padding="@dimen/activity_horizontal_margin">
 
         <com.xw.sample.dashboardviewdemo.DashboardView1
+            android:id="@+id/dashboard_view_1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
         <com.xw.sample.dashboardviewdemo.DashboardView2
+            android:id="@+id/dashboard_view_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
@@ -32,7 +34,7 @@
             android:layout_height="wrap_content"/>
 
         <com.xw.sample.dashboardviewdemo.DashboardView
-            android:id="@+id/dashboard_view_2"
+            android:id="@+id/dashboard_view_2_"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:bigSliceCount="10"
