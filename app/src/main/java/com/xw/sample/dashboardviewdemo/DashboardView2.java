@@ -2,6 +2,7 @@ package com.xw.sample.dashboardviewdemo;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.Resources;
@@ -19,7 +20,6 @@ import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
-import android.view.animation.LinearInterpolator;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -57,6 +57,8 @@ public class DashboardView2 extends View {
     private Path mPath;
     private Rect mRectText;
     private String[] mTexts;
+    private boolean isAnimFinish = true;
+    private float mAngleWhenAnim;
 
     public DashboardView2(Context context) {
         this(context, null);
@@ -137,7 +139,7 @@ public class DashboardView2 extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        canvas.drawColor(ContextCompat.getColor(getContext(), R.color.color_green));
+        canvas.drawColor(ContextCompat.getColor(getContext(), R.color.color_blue));
 
         /**
          * 画进度圆弧(信用值到结束)
@@ -146,24 +148,44 @@ public class DashboardView2 extends View {
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeWidth(mProgressWidth);
         mPaint.setAlpha(80);
-        float α = mStartAngle + calculateRelativeAngleWithValue(mCreditValue);
-        canvas.drawArc(mRectFProgressArc, α, (mStartAngle + mSweepAngle) - α - 1, false, mPaint);
-        /**
-         * 画进度圆弧(起始到信用值)
-         */
+        canvas.drawArc(mRectFProgressArc, mStartAngle + 1, mSweepAngle - 2, false, mPaint);
+
         mPaint.setAlpha(255);
-        mPaint.setShader(generateSweepGradient());
-        canvas.drawArc(mRectFProgressArc, mStartAngle + 1, calculateRelativeAngleWithValue(mCreditValue) - 2, false, mPaint);
-        /**
-         * 画信用值指示亮点
-         */
-        float[] point = getCoordinatePoint(
-                mRadius - mSparkleWidth / 2f,
-                mStartAngle + calculateRelativeAngleWithValue(mCreditValue)
-        );
-        mPaint.setStyle(Paint.Style.FILL);
-        mPaint.setShader(generateRadialGradient(point[0], point[1]));
-        canvas.drawCircle(point[0], point[1], mSparkleWidth / 2f, mPaint);
+        if (isAnimFinish) {
+            /**
+             * 画进度圆弧(起始到信用值)
+             */
+            mPaint.setShader(generateSweepGradient());
+            canvas.drawArc(mRectFProgressArc, mStartAngle + 1,
+                    calculateRelativeAngleWithValue(mCreditValue) - 2, false, mPaint);
+            /**
+             * 画信用值指示亮点
+             */
+            float[] point = getCoordinatePoint(
+                    mRadius - mSparkleWidth / 2f,
+                    mStartAngle + calculateRelativeAngleWithValue(mCreditValue)
+            );
+            mPaint.setStyle(Paint.Style.FILL);
+            mPaint.setShader(generateRadialGradient(point[0], point[1]));
+            canvas.drawCircle(point[0], point[1], mSparkleWidth / 2f, mPaint);
+        } else {
+            /**
+             * 画进度圆弧(起始到信用值)
+             */
+            mPaint.setShader(generateSweepGradient());
+            canvas.drawArc(mRectFProgressArc, mStartAngle + 1,
+                    mAngleWhenAnim - mStartAngle - 2, false, mPaint);
+            /**
+             * 画信用值指示亮点
+             */
+            float[] point = getCoordinatePoint(
+                    mRadius - mSparkleWidth / 2f,
+                    mAngleWhenAnim
+            );
+            mPaint.setStyle(Paint.Style.FILL);
+            mPaint.setShader(generateRadialGradient(point[0], point[1]));
+            canvas.drawCircle(point[0], point[1], mSparkleWidth / 2f, mPaint);
+        }
 
         /**
          * 画刻度圆弧
@@ -174,9 +196,7 @@ public class DashboardView2 extends View {
         mPaint.setAlpha(80);
         mPaint.setStrokeCap(Paint.Cap.SQUARE);
         mPaint.setStrokeWidth(mCalibrationWidth);
-        float β = (float) (180 * (mCalibrationWidth - dp2px(2)) / 2f /
-                (Math.PI * (mRadius - mLength1 - (mCalibrationWidth - dp2px(2)) / 2f)));
-        canvas.drawArc(mRectFCalibrationFArc, mStartAngle + β, mSweepAngle - 2 * β, false, mPaint);
+        canvas.drawArc(mRectFCalibrationFArc, mStartAngle + 3, mSweepAngle - 6, false, mPaint);
 
         /**
          * 画长刻度
@@ -185,17 +205,23 @@ public class DashboardView2 extends View {
         mPaint.setStrokeCap(Paint.Cap.ROUND);
         mPaint.setStrokeWidth(dp2px(2));
         mPaint.setAlpha(120);
-        double cos = Math.cos(Math.toRadians(mStartAngle - 180));
-        double sin = Math.sin(Math.toRadians(mStartAngle - 180));
-        float x0 = (float) (mPadding + mRadius - (mRadius - mLength1 - dp2px(2) / 2f) * cos);
-        float y0 = (float) (mPadding + mRadius - (mRadius - mLength1 - dp2px(2) / 2f) * sin);
-        float x1 = (float) (mPadding + mRadius - (mRadius - mLength1 - mCalibrationWidth - dp2px(1)) * cos);
-        float y1 = (float) (mPadding + mRadius - (mRadius - mLength1 - mCalibrationWidth - dp2px(1)) * sin);
+        float x0 = mCenterX;
+        float y0 = mPadding + mLength1 + dp2px(1);
+        float x1 = mCenterX;
+        float y1 = y0 + mCalibrationWidth;
+        // 逆时针到开始处
         canvas.save();
         canvas.drawLine(x0, y0, x1, y1, mPaint);
-        float angle = mSweepAngle * 1f / mSection;
-        for (int i = 0; i < mSection; i++) {
-            canvas.rotate(angle, mCenterX, mCenterY);
+        float degree = mSweepAngle / mSection;
+        for (int i = 0; i < mSection / 2; i++) {
+            canvas.rotate(-degree, mCenterX, mCenterY);
+            canvas.drawLine(x0, y0, x1, y1, mPaint);
+        }
+        canvas.restore();
+        // 顺时针到结尾处
+        canvas.save();
+        for (int i = 0; i < mSection / 2; i++) {
+            canvas.rotate(degree, mCenterX, mCenterY);
             canvas.drawLine(x0, y0, x1, y1, mPaint);
         }
         canvas.restore();
@@ -204,21 +230,24 @@ public class DashboardView2 extends View {
          * 画短刻度
          * 同样采用canvas的旋转原理
          */
-        canvas.save();
         mPaint.setStrokeWidth(dp2px(1));
         mPaint.setAlpha(80);
-        float x2 = (float) (mPadding + mRadius - (mRadius - mLength1 - dp2px(1) / 2f) * cos);
-        float y2 = (float) (mPadding + mRadius - (mRadius - mLength1 - dp2px(1) / 2f) * sin);
-        float x3 = (float) (mPadding + mRadius - (mRadius - mLength1 - mCalibrationWidth + dp2px(1) / 2f) * cos);
-        float y3 = (float) (mPadding + mRadius - (mRadius - mLength1 - mCalibrationWidth + dp2px(1) / 2f) * sin);
-        canvas.drawLine(x2, y2, x3, y3, mPaint);
-        angle = mSweepAngle * 1f / (mSection * mPortion);
-        for (int i = 1; i < mSection * mPortion; i++) {
-            canvas.rotate(angle, mCenterX, mCenterY);
-            if (i % mPortion == 0) {
-                continue;
-            }
-            canvas.drawLine(x2, y2, x3, y3, mPaint);
+        float x2 = mCenterX;
+        float y2 = y0 + mCalibrationWidth - dp2px(2);
+        // 逆时针到开始处
+        canvas.save();
+        canvas.drawLine(x0, y0, x2, y2, mPaint);
+        degree = mSweepAngle / (mSection * mPortion);
+        for (int i = 0; i < (mSection * mPortion) / 2; i++) {
+            canvas.rotate(-degree, mCenterX, mCenterY);
+            canvas.drawLine(x0, y0, x2, y2, mPaint);
+        }
+        canvas.restore();
+        // 顺时针到结尾处
+        canvas.save();
+        for (int i = 0; i < (mSection * mPortion) / 2; i++) {
+            canvas.rotate(degree, mCenterX, mCenterY);
+            canvas.drawLine(x0, y0, x2, y2, mPaint);
         }
         canvas.restore();
 
@@ -229,7 +258,7 @@ public class DashboardView2 extends View {
         mPaint.setTextSize(sp2px(10));
         mPaint.setTextAlign(Paint.Align.LEFT);
         mPaint.setStyle(Paint.Style.FILL);
-        mPaint.setAlpha(200);
+        mPaint.setAlpha(160);
         for (int i = 0; i < mTexts.length; i++) {
             mPaint.getTextBounds(mTexts[i], 0, mTexts[i].length(), mRectText);
             // 粗略把文字的宽度视为圆心角2*θ对应的弧长，利用弧长公式得到θ，下面用于修正角度
@@ -257,7 +286,7 @@ public class DashboardView2 extends View {
         /**
          * 画表头
          */
-        mPaint.setAlpha(200);
+        mPaint.setAlpha(160);
         mPaint.setTextSize(sp2px(12));
         canvas.drawText(mHeaderText, mCenterX, mCenterY - dp2px(20), mPaint);
 
@@ -265,15 +294,15 @@ public class DashboardView2 extends View {
          * 画信用描述
          */
         mPaint.setAlpha(255);
-        mPaint.setTextSize(sp2px(25));
-        canvas.drawText(calculateCreditDescription(), mCenterX, mCenterY + dp2px(60), mPaint);
+        mPaint.setTextSize(sp2px(20));
+        canvas.drawText(calculateCreditDescription(), mCenterX, mCenterY + dp2px(55), mPaint);
 
         /**
          * 画评估时间
          */
-        mPaint.setAlpha(200);
+        mPaint.setAlpha(160);
         mPaint.setTextSize(sp2px(10));
-        canvas.drawText(getFormatTimeStr(), mCenterX, mCenterY + dp2px(75), mPaint);
+        canvas.drawText(getFormatTimeStr(), mCenterX, mCenterY + dp2px(70), mPaint);
     }
 
     private int dp2px(int dp) {
@@ -288,7 +317,7 @@ public class DashboardView2 extends View {
 
     private SweepGradient generateSweepGradient() {
         SweepGradient sweepGradient = new SweepGradient(mCenterX, mCenterY,
-                new int[]{Color.argb(80, 255, 255, 255), Color.argb(200, 255, 255, 255)},
+                new int[]{Color.argb(0, 255, 255, 255), Color.argb(200, 255, 255, 255)},
                 new float[]{0, calculateRelativeAngleWithValue(mCreditValue) / 360}
         );
         Matrix matrix = new Matrix();
@@ -301,7 +330,7 @@ public class DashboardView2 extends View {
     private RadialGradient generateRadialGradient(float x, float y) {
         return new RadialGradient(x, y, mSparkleWidth / 2f,
                 new int[]{Color.argb(255, 255, 255, 255), Color.argb(80, 255, 255, 255)},
-                new float[]{0, 1},
+                new float[]{0.4f, 1},
                 Shader.TileMode.CLAMP
         );
     }
@@ -343,21 +372,18 @@ public class DashboardView2 extends View {
      * 相对起始角度计算信用分所对应的角度大小
      */
     private float calculateRelativeAngleWithValue(int value) {
-        float anglePerSection = 1f * mSweepAngle / mSection;
-
-        if (value >= 350 && value <= 550) {
-            return 2 * anglePerSection / 200 * (value - 350);
-        } else if (value > 550 && value <= 600) {
-            return 2 * anglePerSection + 2 * anglePerSection / 50 * (value - 550);
-        } else if (value > 600 && value <= 650) {
-            return 4 * anglePerSection + 2 * anglePerSection / 50 * (value - 600);
-        } else if (value > 650 && value <= 700) {
-            return 6 * anglePerSection + 2 * anglePerSection / 50 * (value - 650);
-        } else if (value > 700 && value <= 950) {
-            return 8 * anglePerSection + 2 * anglePerSection / 250 * (value - 700);
+        float degreePerSection = 1f * mSweepAngle / mSection;
+        if (value > 700) {
+            return 8 * degreePerSection + 2 * degreePerSection / 250 * (value - 700);
+        } else if (value > 650) {
+            return 6 * degreePerSection + 2 * degreePerSection / 50 * (value - 650);
+        } else if (value > 600) {
+            return 4 * degreePerSection + 2 * degreePerSection / 50 * (value - 600);
+        } else if (value > 550) {
+            return 2 * degreePerSection + 2 * degreePerSection / 50 * (value - 550);
+        } else {
+            return 2 * degreePerSection / 200 * (value - 350);
         }
-
-        return mMin;
     }
 
     /**
@@ -368,13 +394,10 @@ public class DashboardView2 extends View {
             return "信用极好";
         } else if (mSolidCreditValue > 650) {
             return "信用优秀";
-
         } else if (mSolidCreditValue > 600) {
             return "信用良好";
-
         } else if (mSolidCreditValue > 550) {
             return "信用中等";
-
         }
         return "信用较差";
     }
@@ -402,8 +425,6 @@ public class DashboardView2 extends View {
         postInvalidate();
     }
 
-    boolean isAnimFinish = true;
-
     public void setCreditValueWithAnim(int creditValue) {
         if (mSolidCreditValue == creditValue || creditValue < mMin || creditValue > mMax || !isAnimFinish) {
             return;
@@ -411,15 +432,30 @@ public class DashboardView2 extends View {
 
         mSolidCreditValue = creditValue;
 
-        ValueAnimator valueAnimator = ValueAnimator.ofInt(350, mSolidCreditValue);
-        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+        ValueAnimator creditValueAnimator = ValueAnimator.ofInt(350, mSolidCreditValue);
+        creditValueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 mCreditValue = (int) animation.getAnimatedValue();
                 postInvalidate();
             }
         });
-        valueAnimator.addListener(new AnimatorListenerAdapter() {
+
+        float degree = calculateRelativeAngleWithValue(mSolidCreditValue);
+
+        ValueAnimator degreeValueAnimator = ValueAnimator.ofFloat(mStartAngle, mStartAngle + degree);
+        degreeValueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                mAngleWhenAnim = (float) animation.getAnimatedValue();
+            }
+        });
+
+        AnimatorSet animatorSet = new AnimatorSet();
+        animatorSet
+                .setDuration(2000)
+                .playTogether(creditValueAnimator, degreeValueAnimator);
+        animatorSet.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
                 super.onAnimationStart(animation);
@@ -438,9 +474,7 @@ public class DashboardView2 extends View {
                 isAnimFinish = true;
             }
         });
-        valueAnimator.setInterpolator(new LinearInterpolator());
-        valueAnimator.setDuration(2000);
-        valueAnimator.start();
+        animatorSet.start();
     }
 
 }
