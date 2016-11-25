@@ -3,6 +3,8 @@ package com.xw.sample.dashboardviewdemo;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.Resources;
@@ -57,6 +59,12 @@ public class DashboardView2 extends View {
     private Path mPath;
     private Rect mRectText;
     private String[] mTexts;
+    private int mBackgroundColor;
+    private int[] mBgColors;
+    /**
+     * 由于真实的芝麻信用界面信用值不是线性排布，所以播放动画时若以信用值为参考，则会出现忽慢忽快
+     * 的情况（开始以为是卡顿）。因此，先计算出最终到达角度，以扫过的角度为线性参考，动画就流畅了
+     */
     private boolean isAnimFinish = true;
     private float mAngleWhenAnim;
 
@@ -90,6 +98,12 @@ public class DashboardView2 extends View {
         mRectText = new Rect();
 
         mTexts = new String[]{"350", "较差", "550", "中等", "600", "良好", "650", "优秀", "700", "极好", "950"};
+        mBgColors = new int[]{ContextCompat.getColor(getContext(), R.color.color_red),
+                ContextCompat.getColor(getContext(), R.color.color_orange),
+                ContextCompat.getColor(getContext(), R.color.color_yellow),
+                ContextCompat.getColor(getContext(), R.color.color_green),
+                ContextCompat.getColor(getContext(), R.color.color_blue)};
+        mBackgroundColor = mBgColors[0];
     }
 
     @Override
@@ -139,7 +153,7 @@ public class DashboardView2 extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        canvas.drawColor(ContextCompat.getColor(getContext(), R.color.color_blue));
+        canvas.drawColor(mBackgroundColor);
 
         /**
          * 画进度圆弧(信用值到结束)
@@ -415,6 +429,11 @@ public class DashboardView2 extends View {
         return mCreditValue;
     }
 
+    /**
+     * 设置信用值
+     *
+     * @param creditValue 信用值
+     */
     public void setCreditValue(int creditValue) {
         if (mSolidCreditValue == creditValue || creditValue < mMin || creditValue > mMax) {
             return;
@@ -425,8 +444,13 @@ public class DashboardView2 extends View {
         postInvalidate();
     }
 
+    /**
+     * 设置信用值并播放动画
+     *
+     * @param creditValue 信用值
+     */
     public void setCreditValueWithAnim(int creditValue) {
-        if (mSolidCreditValue == creditValue || creditValue < mMin || creditValue > mMax || !isAnimFinish) {
+        if (creditValue < mMin || creditValue > mMax || !isAnimFinish) {
             return;
         }
 
@@ -441,6 +465,7 @@ public class DashboardView2 extends View {
             }
         });
 
+        // 计算最终值对应的角度，以扫过的角度的线性变化来播放动画
         float degree = calculateRelativeAngleWithValue(mSolidCreditValue);
 
         ValueAnimator degreeValueAnimator = ValueAnimator.ofFloat(mStartAngle, mStartAngle + degree);
@@ -451,10 +476,34 @@ public class DashboardView2 extends View {
             }
         });
 
+        ObjectAnimator colorAnimator = ObjectAnimator.ofInt(this, "mBackgroundColor", mBgColors[0], mBgColors[0]);
+        // 实时信用值对应的背景色的变化
+        long delay = 1000;
+        if (mSolidCreditValue > 700) {
+            colorAnimator.setIntValues(mBgColors[0], mBgColors[1], mBgColors[2], mBgColors[3], mBgColors[4]);
+            delay = 3000;
+        } else if (mSolidCreditValue > 650) {
+            colorAnimator.setIntValues(mBgColors[0], mBgColors[1], mBgColors[2], mBgColors[3]);
+            delay = 2500;
+        } else if (mSolidCreditValue > 600) {
+            colorAnimator.setIntValues(mBgColors[0], mBgColors[1], mBgColors[2]);
+            delay = 2000;
+        } else if (mSolidCreditValue > 550) {
+            colorAnimator.setIntValues(mBgColors[0], mBgColors[1]);
+            delay = 1500;
+        }
+        colorAnimator.setEvaluator(new ArgbEvaluator());
+        colorAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                mBackgroundColor = (int) animation.getAnimatedValue();
+            }
+        });
+
         AnimatorSet animatorSet = new AnimatorSet();
         animatorSet
-                .setDuration(2000)
-                .playTogether(creditValueAnimator, degreeValueAnimator);
+                .setDuration(delay)
+                .playTogether(creditValueAnimator, degreeValueAnimator, colorAnimator);
         animatorSet.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationStart(Animator animation) {
