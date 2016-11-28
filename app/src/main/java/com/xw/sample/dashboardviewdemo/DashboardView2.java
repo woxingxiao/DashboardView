@@ -156,7 +156,7 @@ public class DashboardView2 extends View {
         canvas.drawColor(mBackgroundColor);
 
         /**
-         * 画进度圆弧(信用值到结束)
+         * 画进度圆弧背景
          */
         mPaint.setStrokeCap(Paint.Cap.ROUND);
         mPaint.setStyle(Paint.Style.STROKE);

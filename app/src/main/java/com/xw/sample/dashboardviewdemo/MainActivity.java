@@ -17,6 +17,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private DashboardView1 mDashboardView1;
     private DashboardView2 mDashboardView2;
+    private DashboardView3 mDashboardView3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,12 +28,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mDashboardView1 = (DashboardView1) findViewById(R.id.dashboard_view_1);
         mDashboardView2 = (DashboardView2) findViewById(R.id.dashboard_view_2);
+        mDashboardView3 = (DashboardView3) findViewById(R.id.dashboard_view_3);
         final DashboardView dashboardView1 = (DashboardView) findViewById(R.id.dashboard_view_2_);
-        DashboardView dashboardView3 = (DashboardView) findViewById(R.id.dashboard_view_3);
-        DashboardView dashboardView4 = (DashboardView) findViewById(R.id.dashboard_view_4);
+        DashboardView dashboardView3 = (DashboardView) findViewById(R.id.dashboard_view_3_);
+        DashboardView dashboardView4 = (DashboardView) findViewById(R.id.dashboard_view_4_);
 
         mDashboardView1.setOnClickListener(this);
         mDashboardView2.setOnClickListener(this);
+        mDashboardView3.setOnClickListener(this);
 
         dashboardView1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -113,6 +116,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.dashboard_view_2:
                 mDashboardView2.setCreditValueWithAnim(new Random().nextInt(950 - 350) + 350);
+
+                break;
+            case R.id.dashboard_view_3:
+                mDashboardView3.setCreditValue(new Random().nextInt(950 - 350) + 350);
 
                 break;
         }
