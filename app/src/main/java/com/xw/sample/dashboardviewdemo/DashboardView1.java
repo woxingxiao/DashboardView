@@ -78,7 +78,7 @@ public class DashboardView1 extends View {
         mTexts = new String[mSection + 1]; // 需要显示mSection + 1个刻度读数
         for (int i = 0; i < mTexts.length; i++) {
             int n = (mMax - mMin) / mSection;
-            mTexts[i] = String.valueOf(i * n);
+            mTexts[i] = String.valueOf(mMin + i * n);
         }
     }
 
