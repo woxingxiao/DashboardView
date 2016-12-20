@@ -8,7 +8,5 @@
 ![img](https://github.com/woxingxiao/DashboardViewDemo/blob/master/screenshot/style1.jpg)  
 ![img](https://github.com/woxingxiao/DashboardViewDemo/blob/master/screenshot/style2.gif)
 ![img](https://github.com/woxingxiao/DashboardViewDemo/blob/master/screenshot/style3.jpg)  
-![img](https://github.com/woxingxiao/DashboardViewDemo/blob/master/screenshot/Screenshot5.png)
-![img](https://github.com/woxingxiao/DashboardViewDemo/blob/master/screenshot/Screenshot7.gif)  
 
 欢迎`fork` or `star`
