@@ -36,50 +36,9 @@
 
         <com.xw.sample.dashboardviewdemo.DashboardView4
             android:id="@+id/dashboard_view_4"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"/>
-
-        <com.xw.sample.dashboardviewdemo.DashboardView
-            android:id="@+id/default_dashboard_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-
-        <com.xw.sample.dashboardviewdemo.DashboardView
-            android:id="@+id/dashboard_view_2_"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:bigSliceCount="10"
-            app:headerRadius="50dp"
-            app:headerTitle="kW"
-            app:maxValue="500"
-            app:measureTextSize="10sp"
-            app:radius="110dp"
-            app:realTimeValue="325"
-            app:startAngle="210"
-            app:stripeWidth="30dp"
-            app:sweepAngle="120"/>
-
-        <com.xw.sample.dashboardviewdemo.DashboardView
-            android:id="@+id/dashboard_view_3_"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:bigSliceCount="12"
-            app:headerRadius="50dp"
-            app:headerTitle="km/h"
-            app:maxValue="240"
-            app:measureTextSize="10sp"
-            app:radius="110dp"
-            app:realTimeValue="80"
-            app:sliceCountInOneBigSlice="2"
-            app:startAngle="170"
-            app:stripeMode="inner"
-            app:stripeWidth="40dp"
-            app:sweepAngle="200"/>
-
-        <com.xw.sample.dashboardviewdemo.DashboardView
-            android:id="@+id/dashboard_view_4_"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_marginTop="16dp"
+            android:padding="@dimen/activity_horizontal_margin"/>
     </LinearLayout>
 </ScrollView>
