@@ -103,12 +103,12 @@ public class DashboardView4 extends View {
                 point2[1] + mRadius + mStrokeWidth * 2);
         setMeasuredDimension(width, height + getPaddingTop() + getPaddingBottom());
 
-        mCenterX = mCenterY = getWidth() / 2f;
+        mCenterX = mCenterY = getMeasuredWidth() / 2f;
         mRectFArc.set(
                 getPaddingLeft() + mStrokeWidth,
                 getPaddingTop() + mStrokeWidth,
-                getWidth() - getPaddingRight() - mStrokeWidth,
-                getWidth() - getPaddingBottom() - mStrokeWidth
+                getMeasuredWidth() - getPaddingRight() - mStrokeWidth,
+                getMeasuredWidth() - getPaddingBottom() - mStrokeWidth
         );
 
         mPaint.setTextSize(sp2px(16));

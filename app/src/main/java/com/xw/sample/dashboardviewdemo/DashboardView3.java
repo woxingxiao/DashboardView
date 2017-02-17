@@ -100,7 +100,7 @@ public class DashboardView3 extends View {
 
         setMeasuredDimension(width, width - dp2px(50));
 
-        mCenterX = mCenterY = getWidth() / 2f;
+        mCenterX = mCenterY = getMeasuredWidth() / 2f;
         mRectFProgressArc.set(
                 mPadding + mSparkleWidth / 2f,
                 mPadding + mSparkleWidth / 2f,
