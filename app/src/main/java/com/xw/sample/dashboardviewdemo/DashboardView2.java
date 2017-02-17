@@ -124,19 +124,19 @@ public class DashboardView2 extends View {
 
         setMeasuredDimension(width, width - dp2px(30));
 
-        mCenterX = mCenterY = getWidth() / 2f;
+        mCenterX = mCenterY = getMeasuredWidth() / 2f;
         mRectFProgressArc.set(
                 mPadding + mSparkleWidth / 2f,
                 mPadding + mSparkleWidth / 2f,
-                getWidth() - mPadding - mSparkleWidth / 2f,
-                getWidth() - mPadding - mSparkleWidth / 2f
+                getMeasuredWidth() - mPadding - mSparkleWidth / 2f,
+                getMeasuredWidth() - mPadding - mSparkleWidth / 2f
         );
 
         mRectFCalibrationFArc.set(
                 mLength1 + mCalibrationWidth / 2f,
                 mLength1 + mCalibrationWidth / 2f,
-                getWidth() - mLength1 - mCalibrationWidth / 2f,
-                getWidth() - mLength1 - mCalibrationWidth / 2f
+                getMeasuredWidth() - mLength1 - mCalibrationWidth / 2f,
+                getMeasuredWidth() - mLength1 - mCalibrationWidth / 2f
         );
 
         mPaint.setTextSize(sp2px(10));
