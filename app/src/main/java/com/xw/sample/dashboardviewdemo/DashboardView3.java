@@ -104,8 +104,8 @@ public class DashboardView3 extends View {
         mRectFProgressArc.set(
                 mPadding + mSparkleWidth / 2f,
                 mPadding + mSparkleWidth / 2f,
-                getWidth() - mPadding - mSparkleWidth / 2f,
-                getWidth() - mPadding - mSparkleWidth / 2f
+                getMeasuredWidth() - mPadding - mSparkleWidth / 2f,
+                getMeasuredWidth() - mPadding - mSparkleWidth / 2f
         );
 
         mPaint.setTextSize(sp2px(10));

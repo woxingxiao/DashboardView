@@ -116,8 +116,8 @@ public class DashboardView4 extends View {
         mRectFInnerArc.set(
                 getPaddingLeft() + mLength2 + mRectText.height() + dp2px(30),
                 getPaddingTop() + mLength2 + mRectText.height() + dp2px(30),
-                getWidth() - getPaddingRight() - mLength2 - mRectText.height() - dp2px(30),
-                getWidth() - getPaddingBottom() - mLength2 - mRectText.height() - dp2px(30)
+                getMeasuredWidth() - getPaddingRight() - mLength2 - mRectText.height() - dp2px(30),
+                getMeasuredWidth() - getPaddingBottom() - mLength2 - mRectText.height() - dp2px(30)
         );
 
         mPLRadius = mRadius - dp2px(30);
