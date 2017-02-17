@@ -144,8 +144,8 @@ public class DashboardView2 extends View {
         mRectFTextArc.set(
                 mLength2 + mRectText.height(),
                 mLength2 + mRectText.height(),
-                getWidth() - mLength2 - mRectText.height(),
-                getWidth() - mLength2 - mRectText.height()
+                getMeasuredWidth() - mLength2 - mRectText.height(),
+                getMeasuredWidth() - mLength2 - mRectText.height()
         );
     }
 
